@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Risetogether"
+        tools:targetApi="31">
+
+        <!-- Splash Screen: First screen to open -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Risetogether.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <!-- Patient Login Screen -->
+        <activity
+            android:name=".PatientLoginScreen"
+            android:exported="true"
+            android:label="Patient Login"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <!-- Doctors Login Screen -->
+        <activity
+            android:name=".DoctorLoginScreen"
+            android:exported="true"
+            android:label="Doctor Login"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <!-- Caregiver Login Screen -->
+        <activity
+            android:name=".VolunteerLoginScreen"
+            android:exported="true"
+            android:label="Volunteer Login"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <!-- Register Screen -->
+        <activity
+            android:name=".RegisterScreen"
+            android:exported="true"
+            android:label="Register"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <!-- Reset Password Screen -->
+        <activity
+            android:name=".ResetPasswordScreen"
+            android:exported="true"
+            android:label="Reset Password"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity
+            android:name=".ResetPasswordVolunteerScreen"
+            android:exported="true"
+            android:label="Volunteer Reset Password"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity
+            android:name=".ResetPasswordDoctorScreen"
+            android:exported="true"
+            android:label="Volunteer Reset Password"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity
+            android:name=".DoctorDashboardScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity
+            android:name=".Patient.PatientDashboardScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity
+            android:name=".Patient.PatientinTreatmentProfile"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity android:name=".Patient.ViewListVolunteersScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+    </application>
+
+</manifest>

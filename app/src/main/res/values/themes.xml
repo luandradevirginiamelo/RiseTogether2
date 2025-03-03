@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Tema Principal do App -->
+    <style name="Theme.Risetogether" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <!-- Tema da Splash Screen (Fundo Vermelho, como no Globoplay) -->
+    <style name="Theme.Risetogether.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/cardview_shadow_end_color</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Risetogether</item>
+    </style>
+
+</resources>
+
+
+
+
+
