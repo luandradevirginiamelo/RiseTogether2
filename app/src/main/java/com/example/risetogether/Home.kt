@@ -55,7 +55,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     .clip(RoundedCornerShape(8.dp))
             )
 
-            Spacer(modifier = Modifier.weight(1f)) // Empurra os botões para cima
+            Spacer(modifier = Modifier.weight(1f)) // Buttons UP
 
             PatientButton(text = "Patient") {
                 context.startActivity(Intent(context, PatientLoginScreen::class.java))
@@ -73,7 +73,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                 context.startActivity(Intent(context, DoctorLoginScreen::class.java))
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Deixa os botões mais centralizados
+            Spacer(modifier = Modifier.weight(1f)) // Centralized
         }
     }
 }

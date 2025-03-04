@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,9 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.PatientLoginScreen
@@ -61,6 +66,38 @@ fun PatientinTreatmentProfileContent() {
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    @Composable
+    fun SmallGradientButton(text: String, onClick: () -> Unit) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .height(76.dp) // 🔹 Mantém o botão pequeno como no Dashboard
+                .width(105.dp) // 🔹 Largura específica do Dashboard
+                .padding(end = 8.dp), // 🔹 Adiciona espaçamento para alinhar corretamente
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul Médio
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = text,
+                    fontSize = 14.sp, // 🔹 Mesmo tamanho de texto do Dashboard
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+
     // 🔥 Esconde a mensagem de erro após 3 segundos
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
@@ -98,68 +135,90 @@ fun PatientinTreatmentProfileContent() {
             .addOnSuccessListener { documents ->
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // Verifique o nome do campo!!
                 taskOptions = tasks
-                selectedTask = if (tasks.isNotEmpty()) tasks[0] else "Nenhuma tarefa encontrada"
+                selectedTask = if (tasks.isNotEmpty()) tasks[0] else "Tasks not Found"
 
                 // Debug: Mostrar no Log do Android
-                println("🔥 Firestore encontrou tarefas: $tasks")
+                println("🔥 Firestore Find Tasks: $tasks")
             }
             .addOnFailureListener { exception ->
-                println("❌ Erro ao buscar tarefas: ${exception.message}")
+                println("❌ Error no Task Founded: ${exception.message}")
             }
     }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo),
-                            contentDescription = "App Logo",
-                            modifier = Modifier
-                                .size(130.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(
-                            onClick = {
-                                auth.signOut()
-                                context.startActivity(Intent(context, PatientLoginScreen::class.java))
-                            },
-                            modifier = Modifier.padding(end = 8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500))
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFB3E5FC), // 🔹 Azul Claro
+                        Color(0xFF42A5F5), // 🔹 Azul Médio
+                        Color(0xFF9E9E9E)  // 🔹 Cinza
+                    )
+                )
+            )
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent, // 🔥 Isso impede que o Scaffold cubra o fundo azul
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Logout", color = Color.White, fontSize = 14.sp)
+                            Image(
+                                painter = painterResource(id = R.drawable.logo),
+                                contentDescription = "App Logo",
+                                modifier = Modifier
+                                    .size(130.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            SmallGradientButton(
+                                text = "Logout",
+                                onClick = {
+                                    auth.signOut()
+                                    context.startActivity(Intent(context, PatientLoginScreen::class.java))
+                                }
+                            )
                         }
                     }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(20.dp))
+                )
+            }
+        ) { paddingValues ->
 
-            Text("Create Profile Record with Required Assistance", fontSize = 18.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text("Hello, $patientName $patientSurname", fontSize = 20.sp, color = Color.Black)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues) // 🔥 Aplica padding corretamente!
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
+                // 🔥 CONTAINER BRANCO ENVOLVENDO O CONTEÚDO
+                Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(8.dp, RoundedCornerShape(12.dp)) // 🔹 Adiciona sombra para destaque
+                    .background(Color.White, RoundedCornerShape(12.dp)) // 🔹 Fundo branco arredondado
+                    .padding(16.dp) // 🔹 Espaçamento interno
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Create Profile Record with Required Assistance", fontSize = 18.sp, color = Color.Black)
+                    Spacer(modifier = Modifier.height(10.dp))
 
-            Text(
-                "Please, select an option from each of the following pull-down menus, that best describes the type of assistance you may require:",
-                fontSize = 16.sp,
-                color = Color.Black
-            )
+                    Text("Hello, $patientName $patientSurname", fontSize = 20.sp, color = Color.Black)
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    "Please, select an option from each of the following pull-down menus, that best describes the type of assistance you may require:",
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -226,7 +285,7 @@ fun PatientinTreatmentProfileContent() {
             Spacer(modifier = Modifier.height(20.dp))
 
             // 🔥 Dropdown 3: Number of Days
-            Text("Number of Days for Selected Assistance Task:", fontSize = 16.sp, color = Color.Black)
+            Text("Number of Days Selected Assistance Task Required per Week::", fontSize = 16.sp, color = Color.Black)
             ExposedDropdownMenuBox(
                 expanded = daysExpanded,
                 onExpandedChange = { daysExpanded = !daysExpanded }
@@ -253,7 +312,7 @@ fun PatientinTreatmentProfileContent() {
                     }
                 }
             }
-
+                } // 🔹 FECHA O BOX AQUI!
             Spacer(modifier = Modifier.height(8.dp))
 
             // 🔥 Exibir mensagem de erro no centro da tela
@@ -265,62 +324,97 @@ fun PatientinTreatmentProfileContent() {
                     modifier = Modifier.padding(16.dp)
                 )
             }
-
+                }
             Spacer(modifier = Modifier.height(10.dp))
-
-            // 🔥 Botão Save com Validação
-            StyledButton("Save") {
-                val userId = auth.currentUser?.uid ?: return@StyledButton
-
-                // 🔥 Validação: Verifica se todos os campos foram preenchidos
-                if (selectedCategory.isBlank() || selectedTask.isBlank() || selectedDays.isBlank()) {
-                    errorMessage = "Please fill in all required fields before saving."
-                    return@StyledButton
+                @Composable
+                fun GradientButton(text: String, onClick: () -> Unit) {
+                    Button(
+                        onClick = onClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(75.dp)
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = text,
+                                fontSize = 20.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 20.dp)
+                            )
+                        }
+                    }
                 }
 
-                val patientData = hashMapOf(
-                    "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // ID automático
-                    "CancerPatientID" to userId,
-                    "CancerType" to "Lung Cancer",
-                    "CancerPatientGender" to "Male",
-                    "AssistTaskCategoryID" to selectedCategory,
-                    "AssistTaskID" to selectedTask,
-                    "NoOfDaysPerWeek" to selectedDays
-                )
 
-                db.collection("CancerPatientProfile").add(patientData)
-                    .addOnSuccessListener {
-                        errorMessage = null
-                        Toast.makeText(context, "Patient in Treatment Profile Record Successfully Created!", Toast.LENGTH_LONG).show()
+// 🔥 Botão Save com Validação
+                GradientButton(text = "Save") {
+                    val userId = auth.currentUser?.uid ?: return@GradientButton
+
+                    // 🔥 Validação: Verifica se todos os campos foram preenchidos
+                    if (selectedCategory.isBlank() || selectedTask.isBlank() || selectedDays.isBlank()) {
+                        errorMessage = "Please fill in all required fields before saving."
+                        return@GradientButton
                     }
-                    .addOnFailureListener {
-                        errorMessage = "Error saving data."
-                    }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                    val patientData = hashMapOf(
+                        "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // ID automático
+                        "CancerPatientID" to userId,
+                        "CancerType" to "Lung Cancer",
+                        "CancerPatientGender" to "Male",
+                        "AssistTaskCategoryID" to selectedCategory,
+                        "AssistTaskID" to selectedTask,
+                        "NoOfDaysPerWeek" to selectedDays
+                    )
 
-            StyledButton("Another Assistance Task") {
-                selectedCategory = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
-                categoryExpanded = false
+                    db.collection("CancerPatientProfile").add(patientData)
+                        .addOnSuccessListener {
+                            errorMessage = null
+                            Toast.makeText(context, "Patient in Treatment Profile Record Successfully Created!", Toast.LENGTH_LONG).show()
+                        }
+                        .addOnFailureListener {
+                            errorMessage = "Error saving data."
+                        }
+                }
 
-                taskOptions = listOf() // 🔥 Limpa a lista de tarefas
-                selectedTask = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
-                taskExpanded = false
+                Spacer(modifier = Modifier.height(5.dp))
 
-                selectedDays = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
-                daysExpanded = false
-            }
+                GradientButton(text = "Another Assistance Task") {
+                    selectedCategory = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    categoryExpanded = false
 
-            Spacer(modifier = Modifier.height(8.dp))
+                    taskOptions = listOf() // 🔥 Limpa a lista de tarefas
+                    selectedTask = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    taskExpanded = false
 
-            StyledButton("Back to Dashboard") {
-                context.startActivity(Intent(context, PatientDashboardScreen::class.java))
-            }
+                    selectedDays = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    daysExpanded = false
+                }
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                GradientButton(text = "Back to Dashboard") {
+                    context.startActivity(Intent(context, PatientDashboardScreen::class.java))
+                }
 
 
         }
         }
     }
+}
 
 

@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// 🔶 Fundo para Pacientes (Turquesa → Roxo → Laranja)
+// 🔹 Background for Patients (Light Blue → Blue → Purple)
 @Composable
 fun PatientBackground(content: @Composable () -> Unit) {
     Box(
@@ -17,9 +17,9 @@ fun PatientBackground(content: @Composable () -> Unit) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF40E0D0), // Turquesa
-                        Color(0xFF8E24AA), // Roxo
-                        Color(0xFFFFA726)  // Laranja
+                        Color(0xFFB3E5FC), // Light Blue
+                        Color(0xFF42A5F5), // Blue
+                        Color(0xFF9E9E9E)  // Purple
                     )
                 )
             )
@@ -28,7 +28,7 @@ fun PatientBackground(content: @Composable () -> Unit) {
     }
 }
 
-// 🟢 Fundo para Voluntários (Green→ Branco)
+// 🔹 Background for Volunteers (Blue → White)
 @Composable
 fun VolunteerBackground(content: @Composable () -> Unit) {
     Box(
@@ -37,8 +37,9 @@ fun VolunteerBackground(content: @Composable () -> Unit) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF2ECC71), //
-                        Color(0xFFFFFFFF)  //
+                        Color(0xFF42A5F5), // Blue
+                        Color(0xFFFFFFFF), // White
+                        Color(0xFF00C9A7)  // White
                     )
                 )
             )

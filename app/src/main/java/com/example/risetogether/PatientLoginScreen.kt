@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -34,7 +35,7 @@ import com.example.risetogether.ui.theme.PatientBackground
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.risetogether.Patient.PatientDashboardScreen
-
+import com.example.risetogether.ui.theme.PatientButton
 
 
 class PatientLoginScreen : ComponentActivity() {
@@ -69,16 +70,21 @@ fun PatientLoginScreenContent() {
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        // 🔥 Logo
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "App Logo",
+        // 🔹 Logo com fundo branco e sombra
+        Box(
             modifier = Modifier
-                .size(200.dp)
-                .clip(RoundedCornerShape(16.dp))
-        )
-
-        Spacer(modifier = Modifier.height(15.dp))
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
+                .padding(16.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+        }
 
         // 🔥 Screen Title
         Text(
@@ -145,11 +151,8 @@ fun PatientLoginScreenContent() {
                 }
 
                 // 🔹 Login Button (Patient Authentication & Verification)
-                GradientButton(
+                PatientButton(
                     text = "Login",
-                    gradient = Brush.linearGradient(
-                        colors = listOf(Color(0xFFFFA726), Color(0xFFFF9800)) // 🔥 Orange Gradient
-                    )
                 ) {
                     isLoading = true
                     errorMessage = null
@@ -219,6 +222,7 @@ fun GradientButton(text: String, gradient: Brush, onClick: () -> Unit) {
             .background(brush = gradient, shape = RoundedCornerShape(12.dp))
     ) {
         Text(text, fontSize = 18.sp, color = Color.Black)
+
     }
 }
 
