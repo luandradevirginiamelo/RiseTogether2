@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,15 +16,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+
 
 class ViewListVolunteersScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +38,37 @@ class ViewListVolunteersScreen : ComponentActivity() {
         }
     }
 }
-
+@Composable
+fun SmallGradientButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .height(76.dp)
+            .width(105.dp)
+            .padding(end = 8.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul Médio
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                fontSize = 14.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewListVolunteersScreenContent() {
@@ -52,22 +87,20 @@ fun ViewListVolunteersScreenContent() {
 
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
 
-    // 🔥 Fetch patient info (Cancer Type + Gender)
+    // Fetch patient info (Cancer Type + Gender)
     LaunchedEffect(auth.currentUser?.uid) {
         val userId = auth.currentUser?.uid ?: return@LaunchedEffect
-
         db.collection("PatientinTreatment").document(userId)
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
                     patientCancerType = document.getString("CancerType") ?: ""
                     patientGender = document.getString("CancerPatientGender") ?: ""
-                    println("🔥 Paciente: Tipo de Câncer = $patientCancerType, Gênero = $patientGender")
                 }
             }
     }
 
-    // 🔥 Fetch Tasks when Category is Selected
+    // Fetch Tasks when Category is Selected
     LaunchedEffect(selectedCategory) {
         if (selectedCategory.isBlank()) return@LaunchedEffect
 
@@ -80,37 +113,30 @@ fun ViewListVolunteersScreenContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCatID", categoryID)
+            .whereEqualTo("AssistTaskCat", categoryID)
             .get()
             .addOnSuccessListener { documents ->
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
                 taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
                 selectedTask = taskOptions.firstOrNull() ?: ""
                 selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
-
-                println("🔥 Tasks encontradas para categoria $selectedCategory: $taskOptions")
             }
     }
 
-    // 🔥 Fetch Volunteers when Task is Selected
+    // Fetch Volunteers when Task is Selected
     LaunchedEffect(selectedTaskID) {
         if (selectedTaskID.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
 
-        println("🔍 Buscando voluntários para a task ID: $selectedTaskID")
-
-        db.collection("VolunteerAssistanceCatTaskProfile")
+        db.collection("VolunteeringSurvivorProfilewithAssistTask&Category")
             .whereEqualTo("AssistTaskID", selectedTaskID)
-            .whereEqualTo("VolunteerGender", patientGender) // 🚀 Match de gênero!
+            .whereEqualTo("VolunteerGender", patientGender)
             .get()
             .addOnSuccessListener { documents ->
                 val volunteerIDs = documents.mapNotNull { it.getString("VolunteerID") }
-
-                println("🔍 IDs dos voluntários encontrados: $volunteerIDs")
-
                 if (volunteerIDs.isNotEmpty()) {
                     db.collection("VolunteeringCancerSurvivor")
                         .whereIn("VolunteerID", volunteerIDs)
-                        .whereEqualTo("CancerType", patientCancerType) // 🚀 Match de tipo de câncer!
+                        .whereEqualTo("CancerType", patientCancerType)
                         .get()
                         .addOnSuccessListener { volunteerDocs ->
                             val volunteers = volunteerDocs.mapNotNull {
@@ -118,23 +144,17 @@ fun ViewListVolunteersScreenContent() {
                                 val surname = it.getString("VolunteerSurname")
                                 if (name != null && surname != null) "$name $surname" else null
                             }
-
                             volunteerOptions = if (volunteers.isNotEmpty()) volunteers else listOf("No volunteers available")
                             selectedVolunteer = volunteerOptions.firstOrNull() ?: ""
-
-                            println("✅ Voluntários encontrados: $volunteers")
                         }
-                } else {
-                    println("❌ Nenhum voluntário encontrado para essa tarefa.")
                 }
             }
     }
 
-    // 🔥 Save automatically when Volunteer is selected
+    // Save automatically when Volunteer is selected
     LaunchedEffect(selectedVolunteer) {
         if (selectedVolunteer.isNotBlank()) {
             val userId = auth.currentUser?.uid ?: return@LaunchedEffect
-
             db.collection("PatientinTreatment").document(userId)
                 .update("AssignedVolunteer", selectedVolunteer)
                 .addOnSuccessListener {
@@ -143,65 +163,88 @@ fun ViewListVolunteersScreenContent() {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.logo),
-                            contentDescription = "App Logo",
-                            modifier = Modifier
-                                .size(130.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(
-                            onClick = {
-                                auth.signOut()
-                                context.startActivity(Intent(context, PatientLoginScreen::class.java))
-                            },
-                            modifier = Modifier.padding(end = 8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500))
+
+
+    // Layout and UI
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5), Color(0xFF9E9E9E))
+                )
+            )
+    ) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Logout", color = Color.White, fontSize = 14.sp)
+                            Image(
+                                painter = painterResource(id = R.drawable.logo),
+                                contentDescription = "App Logo",
+                                modifier = Modifier
+                                    .size(130.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            SmallGradientButton(
+                                text = "Logout",
+                                onClick = {
+                                    auth.signOut()
+                                    context.startActivity(Intent(context, PatientLoginScreen::class.java))
+                                }
+                            )
+
                         }
                     }
+                )
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(8.dp, RoundedCornerShape(12.dp))
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("List of Volunteers for Required Assistance Task", fontSize = 18.sp, color = Color.Black)
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
+                        DropdownComponent(selectedCategory, assistanceOptions) { selectedCategory = it }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
+                        DropdownComponent(selectedTask, taskOptions) { selectedTask = it }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Text("Available Volunteers for Selected Task:", fontSize = 16.sp, color = Color.Black)
+                        DropdownComponent(selectedVolunteer, volunteerOptions) { selectedVolunteer = it }
+                    }
                 }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("List of Volunteers for Required Assistance Task", fontSize = 18.sp, color = Color.Black)
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
-            DropdownComponent(selectedCategory, assistanceOptions) { selectedCategory = it }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
-            DropdownComponent(selectedTask, taskOptions) { selectedTask = it }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text("Available Volunteers for Selected Task:", fontSize = 16.sp, color = Color.Black)
-            DropdownComponent(selectedVolunteer, volunteerOptions) { selectedVolunteer = it }
+            }
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {

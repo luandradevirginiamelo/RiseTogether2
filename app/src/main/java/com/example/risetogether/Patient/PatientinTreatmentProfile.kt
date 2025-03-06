@@ -48,6 +48,9 @@ fun PatientinTreatmentProfileContent() {
 
     var patientName by remember { mutableStateOf("") }
     var patientSurname by remember { mutableStateOf("") }
+    var patientCancerType by remember { mutableStateOf("") }
+    var patientGender by remember { mutableStateOf("") }
+    var selectedTaskID by remember { mutableStateOf("") }
 
     // 🔥 Assistance Categories (Static List)
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
@@ -62,6 +65,7 @@ fun PatientinTreatmentProfileContent() {
     val daysOptions = listOf("1", "2", "3", "4", "5")
     var selectedDays by remember { mutableStateOf("") } // Começa vazio
     var daysExpanded by remember { mutableStateOf(false) }
+    var AssistTaskCatID by remember { mutableStateOf("") }
 
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -106,6 +110,19 @@ fun PatientinTreatmentProfileContent() {
         }
     }
 
+    LaunchedEffect(auth.currentUser?.uid) {
+        val userId = auth.currentUser?.uid ?: return@LaunchedEffect
+
+        db.collection("PatientinTreatment").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    patientCancerType = document.getString("CancerType") ?: ""
+                    patientGender = document.getString("CancerPatientGender") ?: ""
+                }
+            }
+    }
+
     // 🔥 Fetch Patient Data (Existing)
     LaunchedEffect(auth.currentUser?.uid) {
         auth.currentUser?.uid?.let { userId ->
@@ -119,6 +136,25 @@ fun PatientinTreatmentProfileContent() {
         }
     }
 
+    LaunchedEffect(selectedCategory) {
+        if (selectedCategory.isBlank()) return@LaunchedEffect
+
+        db.collection("AssistanceTaskCategories")
+            .whereEqualTo("AssistTaskCategoryName", selectedCategory)
+            .get()
+            .addOnSuccessListener { documents ->
+                val categoryID = documents.firstOrNull()?.getString("AssistTaskCategoryID") ?: ""
+                AssistTaskCatID = categoryID // ✅ Agora temos o ID correto da categoria de assistência
+
+                // 🔥 Exibir no console para depuração
+                println("✅ AssistTaskCatID encontrado: $AssistTaskCatID")
+            }
+            .addOnFailureListener { exception ->
+                println("❌ Erro ao buscar AssistTaskCatID: ${exception.message}")
+            }
+    }
+
+
     // 🔥 Fetch Tasks when Category is Selected
     LaunchedEffect(selectedCategory) {
         val categoryIDMap = mapOf(
@@ -130,12 +166,13 @@ fun PatientinTreatmentProfileContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCatID", categoryID)
+            .whereEqualTo("AssistTaskCat", categoryID)
             .get()
             .addOnSuccessListener { documents ->
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // Verifique o nome do campo!!
-                taskOptions = tasks
-                selectedTask = if (tasks.isNotEmpty()) tasks[0] else "Tasks not Found"
+                taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
+                selectedTask = taskOptions.firstOrNull() ?: ""
+                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
 
                 // Debug: Mostrar no Log do Android
                 println("🔥 Firestore Find Tasks: $tasks")
@@ -371,13 +408,14 @@ fun PatientinTreatmentProfileContent() {
                         return@GradientButton
                     }
 
+
                     val patientData = hashMapOf(
-                        "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // ID automático
-                        "CancerPatientID" to userId,
-                        "CancerType" to "Lung Cancer",
-                        "CancerPatientGender" to "Male",
-                        "AssistTaskCategoryID" to selectedCategory,
-                        "AssistTaskID" to selectedTask,
+                        "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // PK correto
+                        "CancerPatientID" to userId, // FK correto
+                        "CancerType" to patientCancerType,
+                        "CancerPatientGender" to patientGender,
+                        "AssistTaskCategoryID" to selectedCategory, // FK correto
+                        "AssistTaskID" to selectedTaskID, // ✅ Agora estamos salvando o ID da tarefa, não o nome!
                         "NoOfDaysPerWeek" to selectedDays
                     )
 
@@ -387,7 +425,7 @@ fun PatientinTreatmentProfileContent() {
                             Toast.makeText(context, "Patient in Treatment Profile Record Successfully Created!", Toast.LENGTH_LONG).show()
                         }
                         .addOnFailureListener {
-                            errorMessage = "Error saving data."
+                            Toast.makeText(context, "Error saving data.", Toast.LENGTH_LONG).show()
                         }
                 }
 
