@@ -127,6 +127,7 @@ fun ViewListVolunteersScreenContent() {
     }
 
     // Fetch Volunteers when Task is Selected
+// Fetch Volunteers when Task is Selected
     LaunchedEffect(selectedTaskID) {
         if (selectedTaskID.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
 
@@ -136,6 +137,7 @@ fun ViewListVolunteersScreenContent() {
             .get()
             .addOnSuccessListener { documents ->
                 val volunteerIDs = documents.mapNotNull { it.getString("VolunteerID") }
+
                 if (volunteerIDs.isNotEmpty()) {
                     db.collection("VolunteeringCancerSurvivor")
                         .whereIn("VolunteerID", volunteerIDs)
@@ -147,16 +149,29 @@ fun ViewListVolunteersScreenContent() {
                                 val surname = it.getString("VolunteerSurname")
                                 if (name != null && surname != null) "$name $surname" else null
                             }
-                            volunteerOptions = if (volunteers.isNotEmpty()) volunteers else listOf("No volunteers available")
-                            selectedVolunteer = "" // Keep it empty until the user selects manually
+
+                            // ✅ FIX: Ensure volunteers appear and no auto-selection happens
+                            if (volunteers.isNotEmpty()) {
+                                volunteerOptions = listOf("Select a volunteer") + volunteers
+                            } else {
+                                volunteerOptions = listOf("No volunteers available")
+                            }
+
+                            selectedVolunteer = "" // ✅ Ensures nothing is auto-selected
                         }
+                        .addOnFailureListener {
+                            volunteerOptions = listOf("Error loading volunteers")
+                        }
+                } else {
+                    volunteerOptions = listOf("No volunteers available")
                 }
             }
+
     }
 
-    // Save automatically when Volunteer is selected
+    // Save only when a valid volunteer is selected (ignores "Select a volunteer")
     LaunchedEffect(selectedVolunteer) {
-        if (selectedVolunteer.isNotBlank()) {
+        if (selectedVolunteer.isNotBlank() && selectedVolunteer != "Select a volunteer" && selectedVolunteer != "No volunteers available") {
             val userId = auth.currentUser?.uid ?: return@LaunchedEffect
             db.collection("PatientinTreatment").document(userId)
                 .update("AssignedVolunteer", selectedVolunteer)
@@ -165,6 +180,7 @@ fun ViewListVolunteersScreenContent() {
                 }
         }
     }
+
 
 
 
@@ -263,9 +279,7 @@ fun ViewListVolunteersScreenContent() {
                             if (newSelection != "Select a volunteer" && newSelection != "No volunteers available") {
                                 selectedVolunteer = newSelection
 
-
-
-                        // Show confirmation message
+                                // Show confirmation message
                             Toast.makeText(context, "Volunteer selected: $selectedVolunteer", Toast.LENGTH_SHORT).show()
 
                             // Wait 2 seconds before opening the details screen
