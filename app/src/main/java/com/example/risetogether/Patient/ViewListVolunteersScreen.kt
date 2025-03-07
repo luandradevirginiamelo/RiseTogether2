@@ -2,7 +2,7 @@ package com.example.risetogether.Patient
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -28,7 +28,9 @@ import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
 
 class ViewListVolunteersScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +86,7 @@ fun ViewListVolunteersScreenContent() {
     var selectedVolunteer by remember { mutableStateOf("") }
     var patientCancerType by remember { mutableStateOf("") }
     var patientGender by remember { mutableStateOf("") }
+
 
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
 
@@ -145,7 +148,7 @@ fun ViewListVolunteersScreenContent() {
                                 if (name != null && surname != null) "$name $surname" else null
                             }
                             volunteerOptions = if (volunteers.isNotEmpty()) volunteers else listOf("No volunteers available")
-                            selectedVolunteer = volunteerOptions.firstOrNull() ?: ""
+                            selectedVolunteer = "" // Keep it empty until the user selects manually
                         }
                 }
             }
@@ -222,30 +225,135 @@ fun ViewListVolunteersScreenContent() {
                         .background(Color.White, RoundedCornerShape(12.dp))
                         .padding(16.dp)
                 ) {
+
+
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("List of Volunteers for Required Assistance Task", fontSize = 18.sp, color = Color.Black)
-
                         Spacer(modifier = Modifier.height(10.dp))
 
+                        // Category selection
                         Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
-                        DropdownComponent(selectedCategory, assistanceOptions) { selectedCategory = it }
+                        DropdownComponent(selectedCategory, assistanceOptions) { newCategory ->
+                            selectedCategory = newCategory
+                            selectedTask = "" // Reset task when changing category
+                            selectedVolunteer = "" // Reset volunteer selection
+                            volunteerOptions = listOf() // Reset volunteers list
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
+                        // Task selection
                         Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
-                        DropdownComponent(selectedTask, taskOptions) { selectedTask = it }
+                        DropdownComponent(selectedTask, taskOptions) { newTask ->
+                            selectedTask = newTask
+                            selectedVolunteer = "" // Reset volunteer selection when task changes
+                            volunteerOptions = listOf() // Reset volunteers list
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
+                        // Volunteer selection
                         Text("Available Volunteers for Selected Task:", fontSize = 16.sp, color = Color.Black)
-                        DropdownComponent(selectedVolunteer, volunteerOptions) { selectedVolunteer = it }
+
+                        // Ensure volunteer is not auto-selected
+                        DropdownComponent(
+                            selectedVolunteer,
+                            if (volunteerOptions.isEmpty()) listOf("No volunteers available") else listOf("Select a volunteer") + volunteerOptions
+                        ) { newSelection ->
+                            if (newSelection != "Select a volunteer" && newSelection != "No volunteers available") {
+                                selectedVolunteer = newSelection
+
+
+
+                        // Show confirmation message
+                            Toast.makeText(context, "Volunteer selected: $selectedVolunteer", Toast.LENGTH_SHORT).show()
+
+                            // Wait 2 seconds before opening the details screen
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                val intent = Intent(context, ViewDetailsSelectedVolunteer::class.java)
+                                intent.putExtra("volunteerName", selectedVolunteer) // Sending the selected volunteer's name
+                                context.startActivity(intent) // Opening the details screen
+
+                                // After opening the new screen, reset everything
+                                selectedCategory = ""
+                                selectedTask = ""
+                                selectedVolunteer = ""
+                                volunteerOptions = listOf() // Clear volunteers for the next selection
+                            }, 2000) // 2000 milliseconds = 2 seconds
+                        }
                     }
-                }
+
+
             }
         }
     }
 }
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedValue,
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier.menuAnchor(),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedValue,
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier.menuAnchor(),
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+}@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
