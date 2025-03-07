@@ -101,6 +101,11 @@
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
+        <activity android:name=".Patient.ViewDetailsSelectedVolunteer"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
     </application>
 
 </manifest>
