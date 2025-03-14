@@ -17,9 +17,9 @@ fun PatientBackground(content: @Composable () -> Unit) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFFB3E5FC), // Light Blue
-                        Color(0xFF42A5F5), // Blue
-                        Color(0xFF9E9E9E)  // Purple
+                        Color(0xFFB3E5FC), // Azul bebê → Passa leveza e serenidade
+                        Color(0xFF64B5F6), // Azul médio → Mantém a confiança sem ser forte demais
+                        Color(0xFFA7E6E2)  // Verde água → Tranquilidade e sensação de frescor
                     )
                 )
             )
@@ -37,9 +37,9 @@ fun VolunteerBackground(content: @Composable () -> Unit) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF42A5F5), // Blue
-                        Color(0xFFFFFFFF), // White
-                        Color(0xFF00C9A7)  // White
+                        Color(0xFF90CAF9), // Azul bebê → Mantém a confiança, mas com um tom mais suave
+                        Color(0xFF81C784), // Verde menta → Mais leve, simboliza esperança e renovação
+                        Color(0xFFFFF8E1)  // Off-white amarelado → Menos agressivo que o branco puro, mais acolhedor
                     )
                 )
             )
@@ -57,8 +57,9 @@ fun DoctorBackground(content: @Composable () -> Unit) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFFFFFFFF), // Branco
-                        Color(0xFF8E24AA)  // Roxo
+                        Color(0xFFEDE7F6), // Lilás bem claro → Transmite calma e sofisticação
+                        Color(0xFFB39DDB), // Roxo suave → Mantém a identidade sem ser pesado
+                        Color(0xFF673AB7)  // Roxo profundo → Passa autoridade e confiança
                     )
                 )
             )

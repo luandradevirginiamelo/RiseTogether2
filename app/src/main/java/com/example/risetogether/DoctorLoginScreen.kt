@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.ui.theme.DoctorBackground
@@ -66,25 +69,33 @@ fun DoctorLoginScreenContent() {
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        // 🔥 App Logo
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "App Logo",
+        // 🔹 Logo com fundo branco e sombra
+        Box(
             modifier = Modifier
-                .size(200.dp)
-                .clip(RoundedCornerShape(16.dp))
-        )
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
+                .padding(16.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+        }
 
-        Spacer(modifier = Modifier.height(15.dp))
-
-        // 🔥 Screen Title
         Text(
-            text = "Doctor Login Screen",
-            fontSize = 22.sp,
-            color = Color.Black
+            text = "Doctor Login",
+            style = MaterialTheme.typography.headlineLarge, // Usa estilo de título do Material 3
+            color = MaterialTheme.colorScheme.primary, // Usa a cor primária do tema
+            modifier = Modifier
+                .padding(vertical = 16.dp) // Espaçamento para melhor layout
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center // Centraliza o texto
         )
 
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // 🔥 White Container
         Card(

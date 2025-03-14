@@ -106,6 +106,33 @@
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
+
+        <activity android:name=".Volunteer.VolunteerDashboardScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity android:name=".Volunteer.PatientRequestsScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity android:name=".Volunteer.VolunteerProfileScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity android:name=".Volunteer.FeedbackRatingsScreen"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity android:name=".Volunteer.CreateProfileCalendarSchedule"
+            android:exported="true"
+            android:label="Doctor Dashboard"
+            android:theme="@style/Theme.Risetogether"/>
+
+
     </application>
 
 </manifest>

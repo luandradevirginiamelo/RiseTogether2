@@ -25,8 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import kotlinx.coroutines.launch
-import com.example.risetogether.Patient.PatientinTreatmentProfile
-import com.example.risetogether.ui.theme.ElevatedGradientButton
+
 
 class PatientDashboardScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -146,45 +145,65 @@ fun PatientDashboardScreenContent() {
                         // 🔹 LOGO
                         Box(
                             modifier = Modifier
-                                .shadow(12.dp, RoundedCornerShape(12.dp))
-                                .background(Color.White, RoundedCornerShape(12.dp))
-                                .padding(16.dp)
+                                .shadow(12.dp, RoundedCornerShape(8.dp))
+                                .background(Color.White, RoundedCornerShape(6.dp))
+                                .padding(8.dp)
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "App Logo",
                                 modifier = Modifier
-                                    .size(150.dp)
+                                    .size(120.dp)
                                     .clip(RoundedCornerShape(12.dp))
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(30.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // 🔥 DASHBOARD TITLE
                         Text(
                             text = "Patient in Treatment Home",
-                            fontSize = 24.sp,
+                            fontSize = 20.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(30.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // 🔥 BUTTONS (Using Standard PatientButton)
-                        PatientButton("Create Profile With Required Assistance Tasks") {
+                        PatientButton(
+                            text = "Create Profile With Required Assistance Tasks",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                        ) {
                             context.startActivity(Intent(context, PatientinTreatmentProfile::class.java))
                         }
 
-                        PatientButton("View Volunteers for Required Task and Send Request") {
+                        PatientButton(
+                            text = "View Volunteers for Require Task and Send Request",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                        ) {
                             context.startActivity(Intent(context, ViewListVolunteersScreen::class.java))
                         }
 
-                        PatientButton("View Notifications & Reminders for Requested Task") {
+                        PatientButton(
+                            text = "View Notifications & Reminders for Requested Task",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                        ) {
                             context.startActivity(Intent(context, NotificationsScreen::class.java))
                         }
 
-                        PatientButton("Provide Feedback & Ratings for Received Assistance") {
+                        PatientButton(
+                            text = "Provide Feedback & Ratings for Received Assistance",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                        ) {
                             context.startActivity(Intent(context, FeedbackScreen::class.java))
                         }
                     }
@@ -196,14 +215,18 @@ fun PatientDashboardScreenContent() {
 
 // 🔥 STANDARD BUTTON (PatientButton) FOR ALL SCREENS
 @Composable
-fun PatientButton(text: String, onClick: () -> Unit) {
+fun PatientButton(
+    text: String,
+    modifier: Modifier = Modifier, // 🔥 Agora aceita Modifier
+    onClick: () -> Unit
+) {
     Button(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier // 🔥 Passa o Modifier corretamente
             .fillMaxWidth()
-            .height(75.dp)
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(12.dp),
+            .height(112.dp)
+            .padding(vertical = 2.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
     ) {
         Box(
@@ -219,12 +242,12 @@ fun PatientButton(text: String, onClick: () -> Unit) {
         ) {
             Text(
                 text = text,
-                fontSize = 20.sp,
+                fontSize = 15.sp,
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         }
     }
 }
+

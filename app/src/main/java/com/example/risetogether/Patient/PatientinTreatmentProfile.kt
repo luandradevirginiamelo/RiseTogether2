@@ -117,7 +117,7 @@ fun PatientinTreatmentProfileContent() {
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
-                    patientCancerType = document.getString("CancerType") ?: ""
+                    patientCancerType = document.getString("PatCancerType") ?: ""
                     patientGender = document.getString("CancerPatientGender") ?: ""
                 }
             }

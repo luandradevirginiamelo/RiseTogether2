@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.ui.theme.PatientBackground
@@ -86,11 +87,14 @@ fun PatientLoginScreenContent() {
             )
         }
 
-        // 🔥 Screen Title
         Text(
-            text = "Patient Login Screen",
-            fontSize = 22.sp,
-            color = Color.Black
+            text = "Patient Login",
+            style = MaterialTheme.typography.headlineLarge, // Uses Material 3 headline style
+            color = Color.Black,
+            modifier = Modifier
+                .padding(vertical = 16.dp) // Adds breathing space
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center // Centers the title
         )
 
         // 🔹 White Container for Fields

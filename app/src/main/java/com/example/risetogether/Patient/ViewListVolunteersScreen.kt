@@ -97,7 +97,7 @@ fun ViewListVolunteersScreenContent() {
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
-                    patientCancerType = document.getString("CancerType") ?: ""
+                    patientCancerType = document.getString("PatCancerType") ?: ""
                     patientGender = document.getString("CancerPatientGender") ?: ""
                 }
             }
@@ -141,7 +141,7 @@ fun ViewListVolunteersScreenContent() {
                 if (volunteerIDs.isNotEmpty()) {
                     db.collection("VolunteeringCancerSurvivor")
                         .whereIn("VolunteerID", volunteerIDs)
-                        .whereEqualTo("CancerType", patientCancerType)
+                        .whereEqualTo("VolunCancerType", patientCancerType)
                         .get()
                         .addOnSuccessListener { volunteerDocs ->
                             val volunteers = volunteerDocs.mapNotNull {
