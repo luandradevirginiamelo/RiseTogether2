@@ -141,27 +141,11 @@ fun VolunteerProfileScreenContent() {
     }
 
 
+    var documentList by remember { mutableStateOf(listOf<com.google.firebase.firestore.DocumentSnapshot>()) } // ✅ Store documents
+
     LaunchedEffect(selectedCategory) {
         if (selectedCategory.isBlank()) return@LaunchedEffect
 
-        db.collection("AssistanceTaskCategories")
-            .whereEqualTo("AssistTaskCategoryName", selectedCategory)
-            .get()
-            .addOnSuccessListener { documents ->
-                val categoryID = documents.firstOrNull()?.getString("AssistTaskCategoryID") ?: ""
-                AssistTaskCatID = categoryID // ✅ Agora temos o ID correto da categoria de assistência
-
-                // 🔥 Exibir no console para depuração
-                println("✅ AssistTaskCatID encontrado: $AssistTaskCatID")
-            }
-            .addOnFailureListener { exception ->
-                println("❌ Erro ao buscar AssistTaskCatID: ${exception.message}")
-            }
-    }
-
-
-    // 🔥 Fetch Tasks when Category is Selected
-    LaunchedEffect(selectedCategory) {
         val categoryIDMap = mapOf(
             "Household" to "abc123",
             "Garden" to "def456",
@@ -174,16 +158,16 @@ fun VolunteerProfileScreenContent() {
             .whereEqualTo("AssistTaskCat", categoryID)
             .get()
             .addOnSuccessListener { documents ->
-                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // Verifique o nome do campo!!
-                taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
-                selectedTask = taskOptions.firstOrNull() ?: ""
-                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
+                documentList = documents.documents // ✅ Save documents list
 
-                // Debug: Mostrar no Log do Android
-                println("🔥 Firestore Find Tasks: $tasks")
+                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
+                taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
+
+                selectedTask = taskOptions.firstOrNull() ?: ""
+                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: "" // ✅ Set first task ID
             }
             .addOnFailureListener { exception ->
-                println("❌ Error no Task Founded: ${exception.message}")
+                println("❌ Error fetching tasks: ${exception.message}")
             }
     }
     Box(
@@ -312,11 +296,12 @@ fun VolunteerProfileScreenContent() {
                                 expanded = taskExpanded,
                                 onDismissRequest = { taskExpanded = false }
                             ) {
-                                taskOptions.forEach { option ->
+                                taskOptions.forEachIndexed { index, option ->
                                     DropdownMenuItem(
                                         text = { Text(option) },
                                         onClick = {
                                             selectedTask = option
+                                            selectedTaskID = documentList.getOrNull(index)?.getString("AssistTaskID") ?: "" // ✅ Update Task ID
                                             taskExpanded = false
                                         }
                                     )

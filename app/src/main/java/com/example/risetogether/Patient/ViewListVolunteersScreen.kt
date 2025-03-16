@@ -2,7 +2,6 @@ package com.example.risetogether.Patient
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -93,16 +92,25 @@ fun ViewListVolunteersScreenContent() {
     // Fetch patient info (Cancer Type + Gender)
     LaunchedEffect(auth.currentUser?.uid) {
         val userId = auth.currentUser?.uid ?: return@LaunchedEffect
+
         db.collection("PatientinTreatment").document(userId)
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
                     patientCancerType = document.getString("PatCancerType") ?: ""
                     patientGender = document.getString("CancerPatientGender") ?: ""
+
+                    println("🔥 Paciente encontrado: $patientCancerType, $patientGender")
+                } else {
+                    println("❌ Paciente não encontrado!")
                 }
+            }
+            .addOnFailureListener { exception ->
+                println("❌ Erro ao buscar paciente: ${exception.message}")
             }
     }
 
+    // Fetch Tasks when Category is Selected
     // Fetch Tasks when Category is Selected
     LaunchedEffect(selectedCategory) {
         if (selectedCategory.isBlank()) return@LaunchedEffect
@@ -116,57 +124,72 @@ fun ViewListVolunteersScreenContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCat", categoryID)
+            .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
-                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
+                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // 🔥 Certifique-se de que esse é o nome correto no Firestore.
                 taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
                 selectedTask = taskOptions.firstOrNull() ?: ""
                 selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
+
+                // 🔥 Debugging: Mostrar no Logcat os dados encontrados
+                println("🔥 Firestore Tasks Encontradas: $tasks")
+            }
+            .addOnFailureListener { exception ->
+                println("❌ Erro ao buscar tarefas: ${exception.message}")
             }
     }
+
 
     // Fetch Volunteers when Task is Selected
 // Fetch Volunteers when Task is Selected
     LaunchedEffect(selectedTaskID) {
         if (selectedTaskID.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
 
+        println("🔥 Buscando voluntários para taskID: $selectedTaskID")
+
         db.collection("VolunteeringSurvivorProfilewithAssistTask&Category")
             .whereEqualTo("AssistTaskID", selectedTaskID)
-            .whereEqualTo("VolunteerGender", patientGender)
             .get()
             .addOnSuccessListener { documents ->
                 val volunteerIDs = documents.mapNotNull { it.getString("VolunteerID") }
 
                 if (volunteerIDs.isNotEmpty()) {
-                    db.collection("VolunteeringCancerSurvivor")
-                        .whereIn("VolunteerID", volunteerIDs)
-                        .whereEqualTo("VolunCancerType", patientCancerType)
-                        .get()
-                        .addOnSuccessListener { volunteerDocs ->
-                            val volunteers = volunteerDocs.mapNotNull {
-                                val name = it.getString("VolunteerName")
-                                val surname = it.getString("VolunteerSurname")
-                                if (name != null && surname != null) "$name $surname" else null
-                            }
+                    println("🔥 Encontrados ${volunteerIDs.size} voluntários para esta task.")
 
-                            // ✅ FIX: Ensure volunteers appear and no auto-selection happens
-                            if (volunteers.isNotEmpty()) {
-                                volunteerOptions = listOf("Select a volunteer") + volunteers
-                            } else {
-                                volunteerOptions = listOf("No volunteers available")
-                            }
+                    volunteerIDs.chunked(10).forEach { chunk ->
+                        db.collection("VolunteeringCancerSurvivor")
+                            .whereIn("VolunteerID", chunk)
+                            .whereEqualTo("VolunCancerType", patientCancerType)
+                            .whereEqualTo("VolunGender", patientGender)
+                            .get()
+                            .addOnSuccessListener { volunteerDocs ->
+                                val volunteers = volunteerDocs.mapNotNull {
+                                    val name = it.getString("VolunteerNam")
+                                    val surname = it.getString("VolunteerSurname")
+                                    if (name != null && surname != null) "$name $surname" else null
+                                }
 
-                            selectedVolunteer = "" // ✅ Ensures nothing is auto-selected
-                        }
-                        .addOnFailureListener {
-                            volunteerOptions = listOf("Error loading volunteers")
-                        }
+                                volunteerOptions = if (volunteers.isNotEmpty()) {
+                                    listOf("Select a volunteer") + volunteers
+                                } else {
+                                    listOf("No volunteers available")
+                                }
+
+                                println("🔥 Voluntários filtrados: $volunteers")
+                            }
+                            .addOnFailureListener { exception ->
+                                println("❌ Erro ao buscar voluntários: ${exception.message}")
+                            }
+                    }
                 } else {
+                    println("❌ Nenhum voluntário encontrado para esta task.")
                     volunteerOptions = listOf("No volunteers available")
                 }
             }
-
+            .addOnFailureListener { exception ->
+                println("❌ Erro ao buscar voluntários: ${exception.message}")
+            }
     }
 
     // Save only when a valid volunteer is selected (ignores "Select a volunteer")
