@@ -1,6 +1,5 @@
 package com.example.risetogether.Volunteer
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -29,6 +28,13 @@ import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class VolunteerProfileScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +57,7 @@ fun VolunteerProfileScreenContent() {
     var volunteerCancerType by remember { mutableStateOf("") }
     var volunteerGender by remember { mutableStateOf("") }
     var selectedTaskID by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     // 🔥 Assistance Categories (Static List)
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
@@ -128,7 +135,7 @@ fun VolunteerProfileScreenContent() {
             db.collection("VolunteeringCancerSurvivor").document(userId).get()  // ✅ Correct Collection
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
-                        volunteerName = document.getString("VolunteerNam") ?: ""
+                        volunteerName = document.getString("VolunteerName") ?: ""
                         volunteerSurname = document.getString("VolunteerSurname") ?: ""  // ✅ Correct Field Name
                     } else {
                         println("🚨 No document found for Volunteer ID: $userId")
@@ -312,7 +319,7 @@ fun VolunteerProfileScreenContent() {
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // 🔥 Dropdown 3: Number of Days
-                        Text("Number of Days Selected Assistance Task Required per Week::", fontSize = 16.sp, color = Color.Black)
+                        Text("NO of Days/Week Availability for the Selected Assistance Task:", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = daysExpanded,
                             onExpandedChange = { daysExpanded = !daysExpanded }
@@ -387,36 +394,68 @@ fun VolunteerProfileScreenContent() {
                     }
                 }
 
+                val galleryLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.GetContent()
+                ) { uri: Uri? ->
+                    imageUri = uri // Armazena a URI da imagem selecionada
+                }
+
+                GradientButton(text = "Open Phone Gallery") {
+                    galleryLauncher.launch("image/*") // Abre a galeria para selecionar uma imagem
+                }
+
+                fun uploadImageToFirebaseStorage(onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+                    val uri = imageUri ?: return
+                    val storageRef = FirebaseStorage.getInstance().reference
+                        .child("volunteer_images/${UUID.randomUUID()}.jpg") // Nome aleatório para a imagem
+
+                    storageRef.putFile(uri)
+                        .addOnSuccessListener { taskSnapshot ->
+                            storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                                onSuccess(downloadUri.toString()) // Retorna a URL da imagem
+                            }
+                        }
+                        .addOnFailureListener { exception ->
+                            onFailure(exception)
+                        }
+                }
 
 // 🔥 Botão Save com Validação
                 GradientButton(text = "Save") {
                     val userId = auth.currentUser?.uid ?: return@GradientButton
 
                     // 🔥 Validação: Verifica se todos os campos foram preenchidos
-                    if (selectedCategory.isBlank() || selectedTask.isBlank() || selectedDays.isBlank()) {
-                        errorMessage = "Please fill in all required fields before saving."
+                    if (selectedCategory.isBlank() || selectedTask.isBlank() || selectedDays.isBlank() || imageUri == null) {
+                        errorMessage = "Please fill in all required fields and upload a photo before saving."
                         return@GradientButton
                     }
 
+                    uploadImageToFirebaseStorage(
+                        onSuccess = { imageUrl -> // Quando o upload for bem-sucedido
+                            val volunteerData = hashMapOf(
+                                "VolunteerProfileID" to db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").document().id,
+                                "VolunteerID" to userId,
+                                "VolunCancerType" to volunteerCancerType,
+                                "VolunGender" to volunteerGender,
+                                "AssistTaskCategoryID" to selectedCategory,
+                                "AssistTaskID" to selectedTaskID,
+                                "NoOfDaysPerWeek" to selectedDays,
+                                "VolunteerProfilePic" to imageUrl // ✅ Salva a URL da foto no Firestore
+                            )
 
-                    val patientData = hashMapOf(
-                        "VolunteerProfileID" to db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").document().id, // PK correto
-                        "VolunteerID" to userId, // FK correto
-                        "VolunCancerType" to volunteerCancerType,
-                        "VolunGender" to volunteerGender,
-                        "AssistTaskCategoryID" to selectedCategory, // FK correto
-                        "AssistTaskID" to selectedTaskID, // ✅ Agora estamos salvando o ID da tarefa, não o nome!
-                        "NoOfDaysPerWeek" to selectedDays
+                            db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").add(volunteerData)
+                                .addOnSuccessListener {
+                                    errorMessage = null
+                                    Toast.makeText(context, "Profile successfully created!", Toast.LENGTH_LONG).show()
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(context, "Error saving data.", Toast.LENGTH_LONG).show()
+                                }
+                        },
+                        onFailure = { exception ->
+                            Toast.makeText(context, "Failed to upload image: ${exception.message}", Toast.LENGTH_LONG).show()
+                        }
                     )
-
-                    db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").add(patientData)
-                        .addOnSuccessListener {
-                            errorMessage = null
-                            Toast.makeText(context, "Patient in Treatment Profile Record Successfully Created!", Toast.LENGTH_LONG).show()
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(context, "Error saving data.", Toast.LENGTH_LONG).show()
-                        }
                 }
 
                 Spacer(modifier = Modifier.height(5.dp))
