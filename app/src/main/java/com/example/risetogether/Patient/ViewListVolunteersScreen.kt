@@ -124,7 +124,7 @@ fun ViewListVolunteersScreenContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCatID", categoryID)
+            .whereEqualTo("AssistTaskCat", categoryID)
             .get()
             .addOnSuccessListener { documents ->
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // 🔥 Certifique-se de que esse é o nome correto no Firestore.
@@ -146,49 +146,58 @@ fun ViewListVolunteersScreenContent() {
     LaunchedEffect(selectedTaskID) {
         if (selectedTaskID.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
 
-        println("🔥 Buscando voluntários para taskID: $selectedTaskID")
+        println("🔥 Fetching volunteers for taskID: $selectedTaskID in category: $selectedCategory")
+        println("🚀 DEBUG: Categoria selecionada: $selectedCategory")
+        println("🚀 DEBUG: Task selecionada: $selectedTask")
+        println("🚀 DEBUG: TaskID selecionado: $selectedTaskID")
+        println("🚀 DEBUG: Paciente - Cancer Type: $patientCancerType, Gender: $patientGender")
+        println("🚀 DEBUG: Tentando buscar voluntários para AssistTaskID: $selectedTaskID na categoria: $selectedCategory")
 
         db.collection("VolunteeringSurvivorProfilewithAssistTask&Category")
             .whereEqualTo("AssistTaskID", selectedTaskID)
+            .whereEqualTo("AssistTaskCategoryID", selectedCategory) // ✅ Nome do campo corrigido
             .get()
             .addOnSuccessListener { documents ->
                 val volunteerIDs = documents.mapNotNull { it.getString("VolunteerID") }
 
-                if (volunteerIDs.isNotEmpty()) {
-                    println("🔥 Encontrados ${volunteerIDs.size} voluntários para esta task.")
-
-                    volunteerIDs.chunked(10).forEach { chunk ->
-                        db.collection("VolunteeringCancerSurvivor")
-                            .whereIn("VolunteerID", chunk)
-                            .whereEqualTo("VolunCancerType", patientCancerType)
-                            .whereEqualTo("VolunGender", patientGender)
-                            .get()
-                            .addOnSuccessListener { volunteerDocs ->
-                                val volunteers = volunteerDocs.mapNotNull {
-                                    val name = it.getString("VolunteerNam")
-                                    val surname = it.getString("VolunteerSurname")
-                                    if (name != null && surname != null) "$name $surname" else null
-                                }
-
-                                volunteerOptions = if (volunteers.isNotEmpty()) {
-                                    listOf("Select a volunteer") + volunteers
-                                } else {
-                                    listOf("No volunteers available")
-                                }
-
-                                println("🔥 Voluntários filtrados: $volunteers")
-                            }
-                            .addOnFailureListener { exception ->
-                                println("❌ Erro ao buscar voluntários: ${exception.message}")
-                            }
-                    }
-                } else {
-                    println("❌ Nenhum voluntário encontrado para esta task.")
+                if (volunteerIDs.isEmpty()) {
+                    println("❌ ERRO: Nenhum voluntário encontrado para TaskID: $selectedTaskID na categoria $selectedCategory")
                     volunteerOptions = listOf("No volunteers available")
+                    return@addOnSuccessListener
                 }
+
+                println("🔥 DEBUG: Volunteer IDs encontrados: $volunteerIDs") // ✅ Mostra se achou algum ID
+
+                db.collection("VolunteeringCancerSurvivor")
+                    .whereIn("VolunteerID", volunteerIDs)
+                    .whereEqualTo("VolunCancerType", patientCancerType.trim()) // ✅ Corrigido para evitar erro de formatação
+                    .whereEqualTo("VolunGender", patientGender.trim()) // ✅ Corrigido para evitar erro de formatação
+                    .get()
+                    .addOnSuccessListener { volunteerDocs ->
+                        val volunteers = volunteerDocs.mapNotNull {
+                            val name = it.getString("VolunteerName")
+                            val surname = it.getString("VolunteerSurname")
+                            if (name != null && surname != null) "$name $surname" else null
+                        }
+
+                        if (volunteers.isEmpty()) {
+                            println("❌ ERRO: Nenhum voluntário atende aos filtros de gênero e câncer!")
+                        } else {
+                            println("🔥 DEBUG: Voluntários filtrados: $volunteers") // ✅ Verifica se os nomes aparecem
+                        }
+
+                        volunteerOptions = if (volunteers.isNotEmpty()) {
+                            listOf("Select a volunteer") + volunteers
+                        } else {
+                            listOf("No volunteers available")
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+                        println("❌ ERRO ao buscar voluntários: ${exception.message}")
+                    }
             }
             .addOnFailureListener { exception ->
-                println("❌ Erro ao buscar voluntários: ${exception.message}")
+                println("❌ ERRO ao buscar IDs de voluntários: ${exception.message}")
             }
     }
 
