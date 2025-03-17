@@ -132,9 +132,9 @@
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
-        <activity android:name=".Volunteer.CreateProfileCalendarSchedule"
+        <activity android:name=".Volunteer.CreateProfileCalendarScheduleActivity"
             android:exported="true"
-            android:label="Doctor Dashboard"
+            android:label="Create Profile Calendar"
             android:theme="@style/Theme.Risetogether"/>
 
 

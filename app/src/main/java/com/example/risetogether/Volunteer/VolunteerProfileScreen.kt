@@ -73,9 +73,14 @@ fun VolunteerProfileScreenContent() {
     var selectedDays by remember { mutableStateOf("") } // Começa vazio
     var daysExpanded by remember { mutableStateOf(false) }
     var AssistTaskCatID by remember { mutableStateOf("") }
+    var showSuccessDialog by remember { mutableStateOf(false) } // ✅ Estado para abrir o pop-up
+    var isSaving by remember { mutableStateOf(false) } // ✅ Novo estado para indicar carregamento
+
 
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+
 
     @Composable
     fun SmallGradientButton(text: String, onClick: () -> Unit) {
@@ -420,43 +425,111 @@ fun VolunteerProfileScreenContent() {
                         }
                 }
 
-// 🔥 Botão Save com Validação
-                GradientButton(text = "Save") {
+                GradientButton(text = if (isSaving) "Saving..." else "Save") {
                     val userId = auth.currentUser?.uid ?: return@GradientButton
 
-                    // 🔥 Validação: Verifica se todos os campos foram preenchidos
-                    if (selectedCategory.isBlank() || selectedTask.isBlank() || selectedDays.isBlank() || imageUri == null) {
-                        errorMessage = "Please fill in all required fields and upload a photo before saving."
+                    if (selectedCategory.isBlank()) {
+                        errorMessage = "Please select an Assistance Task Category."
+                        return@GradientButton
+                    }
+                    if (selectedTask.isBlank()) {
+                        errorMessage = "Please select an Assistance Task."
+                        return@GradientButton
+                    }
+                    if (selectedDays.isBlank()) {
+                        errorMessage = "Please select the number of days per week."
+                        return@GradientButton
+                    }
+                    if (imageUri == null) {
+                        errorMessage = "Please upload a photo before saving."
                         return@GradientButton
                     }
 
-                    uploadImageToFirebaseStorage(
-                        onSuccess = { imageUrl -> // Quando o upload for bem-sucedido
-                            val volunteerData = hashMapOf(
-                                "VolunteerProfileID" to db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").document().id,
-                                "VolunteerID" to userId,
-                                "VolunCancerType" to volunteerCancerType,
-                                "VolunGender" to volunteerGender,
-                                "AssistTaskCategoryID" to selectedCategory,
-                                "AssistTaskID" to selectedTaskID,
-                                "NoOfDaysPerWeek" to selectedDays,
-                                "VolunteerProfilePic" to imageUrl // ✅ Salva a URL da foto no Firestore
-                            )
+                    // 🔥 Indicar que o salvamento começou
+                    isSaving = true
+                    errorMessage = null
 
-                            db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").add(volunteerData)
-                                .addOnSuccessListener {
-                                    errorMessage = null
-                                    Toast.makeText(context, "Profile successfully created!", Toast.LENGTH_LONG).show()
-                                }
-                                .addOnFailureListener {
-                                    Toast.makeText(context, "Error saving data.", Toast.LENGTH_LONG).show()
+                    uploadImageToFirebaseStorage(
+                        onSuccess = { imageUrl ->
+                            db.collection("AssistanceTaskwithinCategory")
+                                .whereEqualTo("AssistTaskID", selectedTaskID)
+                                .get()
+                                .addOnSuccessListener { taskDocs ->
+                                    val assistTaskName = taskDocs.firstOrNull()?.getString("AssistanceTaskNam") ?: ""
+
+                                    val volunteerData = hashMapOf(
+                                        "VolunteerProfileID" to db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").document().id,
+                                        "VolunteerID" to userId,
+                                        "AssistTaskCategoryID" to selectedCategory,
+                                        "AssistTaskID" to selectedTaskID,
+                                        "AssistTaskNam" to assistTaskName,
+                                        "NoOfDaysPerWeek" to selectedDays,
+                                        "VolunCancerType" to volunteerCancerType,
+                                        "VolunGender" to volunteerGender,
+                                        "VolunteerProfilePic" to imageUrl
+                                    )
+
+                                    db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").add(volunteerData)
+                                        .addOnSuccessListener {
+                                            isSaving = false // ✅ Indicar que o salvamento foi concluído
+                                            errorMessage = null
+                                            showSuccessDialog = true // ✅ Mostrar pop-up de sucesso
+                                        }
+                                        .addOnFailureListener {
+                                            isSaving = false
+                                            errorMessage = "Error saving data."
+                                        }
                                 }
                         },
                         onFailure = { exception ->
-                            Toast.makeText(context, "Failed to upload image: ${exception.message}", Toast.LENGTH_LONG).show()
+                            isSaving = false
+                            errorMessage = "Failed to upload image: ${exception.message}"
                         }
                     )
                 }
+
+// 🔥 Exibir barra de carregamento enquanto os dados estão sendo salvos
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Blue
+                    )
+                }
+
+// 🔥 Exibir mensagem de erro na tela, se houver
+                errorMessage?.let {
+                    Text(
+                        text = it,
+                        color = Color.Red,
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+
+// 🔥 Exibir pop-up de sucesso
+                if (showSuccessDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showSuccessDialog = false },
+                        title = { Text("Success", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                        text = {
+                            Text("Volunteer's profile record with selected assistance task & category successfully created.\n\nPress 'Continue' to create a profile calendar schedule for that task.")
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showSuccessDialog = false
+                                    context.startActivity(Intent(context, CreateProfileCalendarScheduleActivity::class.java))
+                                }
+                            ) {
+                                Text("Continue")
+                            }
+                        }
+                    )
+                }
+
+
+
+
 
                 Spacer(modifier = Modifier.height(5.dp))
 
