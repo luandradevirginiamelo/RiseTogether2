@@ -150,7 +150,7 @@ fun PatientinTreatmentProfileContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCat", categoryID)
+            .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
                 documentList = documents.documents // ✅ Save documents list
@@ -399,7 +399,7 @@ fun PatientinTreatmentProfileContent() {
                         "CancerPatientID" to userId, // FK correto
                         "CancerType" to patientCancerType,
                         "CancerPatientGender" to patientGender,
-                        "AssistTaskCategoryID" to selectedCategory, // FK correto
+                        "AssistTaskCatID" to selectedCategory, // FK correto
                         "AssistTaskID" to selectedTaskID, // ✅ Agora estamos salvando o ID da tarefa, não o nome!
                         "NoOfDaysPerWeek" to selectedDays
                     )

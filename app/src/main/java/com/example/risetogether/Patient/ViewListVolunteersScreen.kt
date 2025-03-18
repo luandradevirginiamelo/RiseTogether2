@@ -31,6 +31,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 
+
 class ViewListVolunteersScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,9 +86,14 @@ fun ViewListVolunteersScreenContent() {
     var selectedVolunteer by remember { mutableStateOf("") }
     var patientCancerType by remember { mutableStateOf("") }
     var patientGender by remember { mutableStateOf("") }
-
+    var taskIDs by remember { mutableStateOf(listOf<String>()) } // 🔥 Adicionando lista para TaskIDs
 
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
+    // Função para atualizar manualmente a tarefa selecionada
+    fun updateSelectedTask(task: String, taskID: String) {
+        selectedTask = task
+        selectedTaskID = taskID
+    }
 
     // Fetch patient info (Cancer Type + Gender)
     LaunchedEffect(auth.currentUser?.uid) {
@@ -111,7 +117,6 @@ fun ViewListVolunteersScreenContent() {
     }
 
     // Fetch Tasks when Category is Selected
-    // Fetch Tasks when Category is Selected
     LaunchedEffect(selectedCategory) {
         if (selectedCategory.isBlank()) return@LaunchedEffect
 
@@ -124,16 +129,20 @@ fun ViewListVolunteersScreenContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCat", categoryID)
+            .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
-                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // 🔥 Certifique-se de que esse é o nome correto no Firestore.
-                taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
-                selectedTask = taskOptions.firstOrNull() ?: ""
-                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
+                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
+                val ids = documents.mapNotNull { it.getString("AssistTaskID") }
 
-                // 🔥 Debugging: Mostrar no Logcat os dados encontrados
-                println("🔥 Firestore Tasks Encontradas: $tasks")
+                taskOptions = tasks
+                taskIDs = ids
+
+                // 🔥 NÃO SELECIONA A PRIMEIRA TASK AUTOMATICAMENTE
+                selectedTask = ""
+                selectedTaskID = ""
+
+                println("🔥 Firestore Tasks Encontradas: $tasks com IDs: $ids")
             }
             .addOnFailureListener { exception ->
                 println("❌ Erro ao buscar tarefas: ${exception.message}")
@@ -141,37 +150,34 @@ fun ViewListVolunteersScreenContent() {
     }
 
 
-    // Fetch Volunteers when Task is Selected
-// Fetch Volunteers when Task is Selected
+    // 🔥 Efeito que escuta mudanças na TaskID e busca voluntários corretos
     LaunchedEffect(selectedTaskID) {
-        if (selectedTaskID.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
+        if (selectedTaskID.isBlank() || selectedCategory.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
 
-        println("🔥 Fetching volunteers for taskID: $selectedTaskID in category: $selectedCategory")
-        println("🚀 DEBUG: Categoria selecionada: $selectedCategory")
-        println("🚀 DEBUG: Task selecionada: $selectedTask")
-        println("🚀 DEBUG: TaskID selecionado: $selectedTaskID")
-        println("🚀 DEBUG: Paciente - Cancer Type: $patientCancerType, Gender: $patientGender")
-        println("🚀 DEBUG: Tentando buscar voluntários para AssistTaskID: $selectedTaskID na categoria: $selectedCategory")
+        println("🔥 Searching for volunteers for:")
+        println("   👉 TaskID: $selectedTaskID")
+        println("   👉 Categoria: $selectedCategory")
+        println("   👉 Tipo de Câncer do Paciente: $patientCancerType")
+        println("   👉 Gênero do Paciente: $patientGender")
 
-        db.collection("VolunteeringSurvivorProfilewithAssistTask&Category")
-            .whereEqualTo("AssistTaskID", selectedTaskID)
-            .whereEqualTo("AssistTaskCategoryID", selectedCategory) // ✅ Nome do campo corrigido
+        db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory")
+            .whereEqualTo("AssistTaskID", selectedTaskID) // 🔥 Agora a busca usa a TaskID correta
+            .whereEqualTo("AssistTaskCatID", selectedCategory)
             .get()
             .addOnSuccessListener { documents ->
                 val volunteerIDs = documents.mapNotNull { it.getString("VolunteerID") }
 
+
                 if (volunteerIDs.isEmpty()) {
-                    println("❌ ERRO: Nenhum voluntário encontrado para TaskID: $selectedTaskID na categoria $selectedCategory")
+                    println("❌ Nenhum voluntário encontrado para essa tarefa e categoria.")
                     volunteerOptions = listOf("No volunteers available")
                     return@addOnSuccessListener
                 }
 
-                println("🔥 DEBUG: Volunteer IDs encontrados: $volunteerIDs") // ✅ Mostra se achou algum ID
-
                 db.collection("VolunteeringCancerSurvivor")
                     .whereIn("VolunteerID", volunteerIDs)
-                    .whereEqualTo("VolunCancerType", patientCancerType.trim()) // ✅ Corrigido para evitar erro de formatação
-                    .whereEqualTo("VolunGender", patientGender.trim()) // ✅ Corrigido para evitar erro de formatação
+                    .whereEqualTo("VolunCancerType", patientCancerType.trim())
+                    .whereEqualTo("VolunGender", patientGender.trim())
                     .get()
                     .addOnSuccessListener { volunteerDocs ->
                         val volunteers = volunteerDocs.mapNotNull {
@@ -180,43 +186,12 @@ fun ViewListVolunteersScreenContent() {
                             if (name != null && surname != null) "$name $surname" else null
                         }
 
-                        if (volunteers.isEmpty()) {
-                            println("❌ ERRO: Nenhum voluntário atende aos filtros de gênero e câncer!")
-                        } else {
-                            println("🔥 DEBUG: Voluntários filtrados: $volunteers") // ✅ Verifica se os nomes aparecem
-                        }
-
-                        volunteerOptions = if (volunteers.isNotEmpty()) {
-                            listOf("Select a volunteer") + volunteers
-                        } else {
-                            listOf("No volunteers available")
-                        }
+                        volunteerOptions = volunteers
                     }
-                    .addOnFailureListener { exception ->
-                        println("❌ ERRO ao buscar voluntários: ${exception.message}")
-                    }
-            }
-            .addOnFailureListener { exception ->
-                println("❌ ERRO ao buscar IDs de voluntários: ${exception.message}")
             }
     }
 
-    // Save only when a valid volunteer is selected (ignores "Select a volunteer")
-    LaunchedEffect(selectedVolunteer) {
-        if (selectedVolunteer.isNotBlank() && selectedVolunteer != "Select a volunteer" && selectedVolunteer != "No volunteers available") {
-            val userId = auth.currentUser?.uid ?: return@LaunchedEffect
-            db.collection("PatientinTreatment").document(userId)
-                .update("AssignedVolunteer", selectedVolunteer)
-                .addOnSuccessListener {
-                    Toast.makeText(context, "Volunteer Assigned Successfully!", Toast.LENGTH_LONG).show()
-                }
-        }
-    }
-
-
-
-
-    // Layout and UI
+   // Layout and UI
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -279,64 +254,182 @@ fun ViewListVolunteersScreenContent() {
                         Text("List of Volunteers for Required Assistance Task", fontSize = 18.sp, color = Color.Black)
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Category selection
+                        // 🔥 Seleção da Categoria
                         Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
-                        DropdownComponent(selectedCategory, assistanceOptions) { newCategory ->
-                            selectedCategory = newCategory
-                            selectedTask = "" // Reset task when changing category
-                            selectedVolunteer = "" // Reset volunteer selection
-                            volunteerOptions = listOf() // Reset volunteers list
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Task selection
-                        Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
-                        DropdownComponent(selectedTask, taskOptions) { newTask ->
-                            selectedTask = newTask
-                            selectedVolunteer = "" // Reset volunteer selection when task changes
-                            volunteerOptions = listOf() // Reset volunteers list
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Volunteer selection
-                        Text("Available Volunteers for Selected Task:", fontSize = 16.sp, color = Color.Black)
-
-                        // Ensure volunteer is not auto-selected
                         DropdownComponent(
-                            selectedVolunteer,
-                            if (volunteerOptions.isEmpty()) listOf("No volunteers available") else listOf("Select a volunteer") + volunteerOptions
-                        ) { newSelection ->
-                            if (newSelection != "Select a volunteer" && newSelection != "No volunteers available") {
-                                selectedVolunteer = newSelection
-
-                                // Show confirmation message
-                            Toast.makeText(context, "Volunteer selected: $selectedVolunteer", Toast.LENGTH_SHORT).show()
-
-                            // Wait 2 seconds before opening the details screen
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                val intent = Intent(context, ViewDetailsSelectedVolunteer::class.java)
-                                intent.putExtra("volunteerName", selectedVolunteer) // Sending the selected volunteer's name
-                                context.startActivity(intent) // Opening the details screen
-
-                                // After opening the new screen, reset everything
-                                selectedCategory = ""
+                            selectedValue = selectedCategory,
+                            options = assistanceOptions,
+                            onValueChange = { newCategory, _ ->
+                                selectedCategory = newCategory
                                 selectedTask = ""
+                                selectedTaskID = ""
                                 selectedVolunteer = ""
-                                volunteerOptions = listOf() // Clear volunteers for the next selection
-                            }, 2000) // 2000 milliseconds = 2 seconds
+                                volunteerOptions = listOf()
+
+                                println("📂 Categoria Selecionada: $selectedCategory")
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // 🔥 Seleção da Task
+                        Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
+                        DropdownComponent(
+                            selectedValue = selectedTask,
+                            options = taskOptions,
+                            taskIDs = taskIDs,
+                            onValueChange = { newTask, taskID ->
+                                selectedTask = newTask
+                                selectedTaskID = taskID
+                                selectedVolunteer = ""
+                                volunteerOptions = listOf()
+
+                                println("🎯 Tarefa Selecionada: $selectedTask (TaskID: $selectedTaskID)")
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // 🔹 Texto antes dos voluntários (substitui o botão)
+                        if (volunteerOptions.isNotEmpty()) {
+                            Text(
+                                text = "Available Volunteers for Selected Task:",
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+
+                        // 🔹 Texto antes dos voluntários (substitui o botão)
+                        if (volunteerOptions.isNotEmpty()) {
+                            Text(
+                                text = "Select a volunteer available below:",
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // 🔹 Lista de Voluntários (só aparece se houver opções)
+                        Column {
+                            if (volunteerOptions.isEmpty() && selectedTask.isNotBlank()) {
+                                Text("No volunteers available", fontSize = 16.sp, color = Color.Red)
+                            } else {
+                                volunteerOptions.forEach { volunteer ->
+                                    Button(
+                                        onClick = {
+                                            selectedVolunteer = volunteer
+
+                                            val userId = auth.currentUser?.uid ?: return@Button
+
+                                            val parts = selectedVolunteer.split(" ")
+                                            if (parts.size < 2) return@Button
+                                            val selectedVolunteerName = parts[0]
+                                            val selectedVolunteerSurname = parts.drop(1).joinToString(" ")
+
+                                            // 🔥 Buscar o ID do voluntário no Firestore
+                                            db.collection("VolunteeringCancerSurvivor")
+                                                .whereEqualTo("VolunteerName", selectedVolunteerName)
+                                                .whereEqualTo("VolunteerSurname", selectedVolunteerSurname)
+                                                .get()
+                                                .addOnSuccessListener { documents ->
+                                                    if (!documents.isEmpty) {
+                                                        val selectedVolunteerID = documents.first().id
+
+                                                        // 🔥 Salvar o voluntário no Firestore para esse paciente
+                                                        db.collection("PatientinTreatment").document(userId)
+                                                            .update("AssignedVolunteerID", selectedVolunteerID)
+                                                            .addOnSuccessListener {
+                                                                Toast.makeText(context, "Volunteer Assigned Successfully!", Toast.LENGTH_LONG).show()
+
+                                                                // 🔥 Abrir a próxima tela com detalhes do voluntário
+                                                                Handler(Looper.getMainLooper()).postDelayed({
+                                                                    val intent = Intent(context, ViewDetailsSelectedVolunteer::class.java)
+                                                                    intent.putExtra("volunteerID", selectedVolunteerID)
+                                                                    context.startActivity(intent)
+                                                                }, 2000)
+                                                            }
+                                                    } else {
+                                                        println("❌ Voluntário Not Founded!")
+                                                    }
+                                                }
+                                                .addOnFailureListener { exception ->
+                                                    println("❌ Error to find a volunteer: ${exception.message}")
+                                                }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                                    ) {
+                                        Text(volunteer, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                    }
+                                }
+                            }
                         }
                     }
 
+                    // 🔥 Componente de Dropdown ÚNICO para Categoria e Task
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    @Composable
+                    fun DropdownComponent(
+                        selectedValue: String,
+                        options: List<String>,
+                        taskIDs: List<String> = listOf(), // 🔥 Apenas necessário para Task Dropdown
+                        isTaskDropdown: Boolean = false, // 🔥 Indica se é o dropdown de Tasks
+                        onValueChange: (String, String) -> Unit // 🔥 Retorna a opção selecionada e o TaskID (caso seja Task)
+                    ) {
+                        var expanded by remember { mutableStateOf(false) }
 
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedValue,
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.menuAnchor(),
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                options.forEachIndexed { index, option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            val taskID = if (isTaskDropdown) taskIDs.getOrNull(index) ?: "" else "" // 🔥 Obtém TaskID apenas se for uma Task
+                                            onValueChange(option, taskID) // 🔥 Atualiza a UI
+                                            expanded = false
+                                            println("✅ Selecionado: $option (TaskID: $taskID)")
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {
+fun DropdownComponent(
+    selectedValue: String,
+    options: List<String>,
+    taskIDs: List<String> = listOf(),
+    onValueChange: (String, String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
@@ -354,77 +447,14 @@ fun DropdownComponent(selectedValue: String, options: List<String>, onValueChang
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            options.forEach { option ->
+            options.forEachIndexed { index, option ->
                 DropdownMenuItem(
                     text = { Text(option) },
                     onClick = {
-                        onValueChange(option)
+                        val taskID = taskIDs.getOrNull(index) ?: ""
+                        onValueChange(option, taskID)
                         expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedValue,
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.menuAnchor(),
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-}@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DropdownComponent(selectedValue: String, options: List<String>, onValueChange: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selectedValue,
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.menuAnchor(),
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
+                        println("✅ Selecionado: $option (TaskID: $taskID)")
                     }
                 )
             }

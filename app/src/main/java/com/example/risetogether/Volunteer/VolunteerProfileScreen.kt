@@ -98,7 +98,7 @@ fun VolunteerProfileScreenContent() {
                     .fillMaxSize()
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul Médio
+                            colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784)) // 🔥 Azul Claro → Azul Médio
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ),
@@ -167,7 +167,7 @@ fun VolunteerProfileScreenContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCat", categoryID)
+            .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
                 documentList = documents.documents // ✅ Save documents list
@@ -188,9 +188,9 @@ fun VolunteerProfileScreenContent() {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFFB3E5FC), // 🔹 Azul Claro
-                        Color(0xFF42A5F5), // 🔹 Azul Médio
-                        Color(0xFF9E9E9E)  // 🔹 Cinza
+                        Color(0xFF90CAF9), // 🔹 Azul Claro
+                        Color(0xFF81C784), // 🔹 Azul Médio
+                        Color(0xFFFFF8E1)  // 🔹 Cinza
                     )
                 )
             )
@@ -381,7 +381,7 @@ fun VolunteerProfileScreenContent() {
                                 .fillMaxSize()
                                 .background(
                                     brush = Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul
+                                        colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784)) // 🔥 Azul Claro → Azul
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 ),
@@ -460,7 +460,7 @@ fun VolunteerProfileScreenContent() {
                                     val volunteerData = hashMapOf(
                                         "VolunteerProfileID" to db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").document().id,
                                         "VolunteerID" to userId,
-                                        "AssistTaskCategoryID" to selectedCategory,
+                                        "AssistTaskCatID" to selectedCategory,
                                         "AssistTaskID" to selectedTaskID,
                                         "AssistTaskNam" to assistTaskName,
                                         "NoOfDaysPerWeek" to selectedDays,
@@ -469,7 +469,7 @@ fun VolunteerProfileScreenContent() {
                                         "VolunteerProfilePic" to imageUrl
                                     )
 
-                                    db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").add(volunteerData)
+                                    db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory").add(volunteerData)
                                         .addOnSuccessListener {
                                             isSaving = false // ✅ Indicar que o salvamento foi concluído
                                             errorMessage = null
