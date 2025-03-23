@@ -1,7 +1,6 @@
 package com.example.risetogether.Volunteer
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -28,9 +27,9 @@ import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.google.firebase.storage.FirebaseStorage
@@ -75,12 +74,12 @@ fun VolunteerProfileScreenContent() {
     var AssistTaskCatID by remember { mutableStateOf("") }
     var showSuccessDialog by remember { mutableStateOf(false) } // ✅ Estado para abrir o pop-up
     var isSaving by remember { mutableStateOf(false) } // ✅ Novo estado para indicar carregamento
-
-
+    var refreshTrigger by remember { mutableStateOf(0) } //
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-
+    // 🔥 Variável para armazenar o ID do perfil do voluntário criado no Firestore
+    var volunteerProfileID by remember { mutableStateOf("") }
 
     @Composable
     fun SmallGradientButton(text: String, onClick: () -> Unit) {
@@ -175,8 +174,8 @@ fun VolunteerProfileScreenContent() {
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
                 taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
 
-                selectedTask = taskOptions.firstOrNull() ?: ""
-                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: "" // ✅ Set first task ID
+                selectedTask = "" // 🔥 Keep empty until user clicks
+                selectedTaskID = "" // 🔥 Keep empty until user clicks
             }
             .addOnFailureListener { exception ->
                 println("❌ Error fetching tasks: ${exception.message}")
@@ -445,7 +444,6 @@ fun VolunteerProfileScreenContent() {
                         return@GradientButton
                     }
 
-                    // 🔥 Indicar que o salvamento começou
                     isSaving = true
                     errorMessage = null
 
@@ -457,8 +455,11 @@ fun VolunteerProfileScreenContent() {
                                 .addOnSuccessListener { taskDocs ->
                                     val assistTaskName = taskDocs.firstOrNull()?.getString("AssistanceTaskNam") ?: ""
 
+                                    val profileRef = db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory").document()
+                                    val newVolunteerProfileID = profileRef.id // 🔥 Pegando ID correto
+
                                     val volunteerData = hashMapOf(
-                                        "VolunteerProfileID" to db.collection("VolunteeringSurvivorProfilewithAssistTask&Category").document().id,
+                                        "VolunteerProfileID" to newVolunteerProfileID,
                                         "VolunteerID" to userId,
                                         "AssistTaskCatID" to selectedCategory,
                                         "AssistTaskID" to selectedTaskID,
@@ -469,11 +470,14 @@ fun VolunteerProfileScreenContent() {
                                         "VolunteerProfilePic" to imageUrl
                                     )
 
-                                    db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory").add(volunteerData)
+                                    profileRef.set(volunteerData)
                                         .addOnSuccessListener {
-                                            isSaving = false // ✅ Indicar que o salvamento foi concluído
+                                            isSaving = false
                                             errorMessage = null
-                                            showSuccessDialog = true // ✅ Mostrar pop-up de sucesso
+                                            showSuccessDialog = true
+                                            volunteerProfileID = newVolunteerProfileID // 🔥 Salva o ID para passar pra próxima tela!
+
+                                            Log.d("Firestore", "✅ Volunteer Profile saved: $newVolunteerProfileID")
                                         }
                                         .addOnFailureListener {
                                             isSaving = false
@@ -487,6 +491,7 @@ fun VolunteerProfileScreenContent() {
                         }
                     )
                 }
+
 
 // 🔥 Exibir barra de carregamento enquanto os dados estão sendo salvos
                 if (isSaving) {
@@ -505,7 +510,6 @@ fun VolunteerProfileScreenContent() {
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-
 // 🔥 Exibir pop-up de sucesso
                 if (showSuccessDialog) {
                     AlertDialog(
@@ -518,7 +522,14 @@ fun VolunteerProfileScreenContent() {
                             Button(
                                 onClick = {
                                     showSuccessDialog = false
-                                    context.startActivity(Intent(context, CreateProfileCalendarScheduleActivity::class.java))
+
+                                    if (volunteerProfileID.isNotEmpty()) {
+                                        val intent = Intent(context, CreateProfileCalendarScheduleActivity::class.java)
+                                        intent.putExtra("VolunteerProfileID", volunteerProfileID) // ✅ Passando ID corretamente
+                                        context.startActivity(intent)
+                                    } else {
+                                        errorMessage = "Error: Volunteer Profile ID is missing."
+                                    }
                                 }
                             ) {
                                 Text("Continue")
@@ -527,22 +538,19 @@ fun VolunteerProfileScreenContent() {
                     )
                 }
 
-
-
-
-
-                Spacer(modifier = Modifier.height(5.dp))
-
                 GradientButton(text = "Another Assistance Task") {
-                    selectedCategory = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    selectedCategory = "" // 🔥 Reset category
                     categoryExpanded = false
 
-                    taskOptions = listOf() // 🔥 Limpa a lista de tarefas
-                    selectedTask = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    taskOptions = listOf() // 🔥 Clear task list
+                    selectedTask = ""
+                    selectedTaskID = ""
                     taskExpanded = false
 
-                    selectedDays = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    selectedDays = "" // 🔥 Reset days selection
                     daysExpanded = false
+
+                    refreshTrigger++ // 🔥 Forces the app to reload fresh data next time!
                 }
 
                 Spacer(modifier = Modifier.height(5.dp))
@@ -550,10 +558,9 @@ fun VolunteerProfileScreenContent() {
                 GradientButton(text = "Back to Dashboard") {
                     context.startActivity(Intent(context, VolunteerDashboardScreen::class.java))
                 }
-
-
             }
         }
-    }
-}
 
+    }
+
+}
