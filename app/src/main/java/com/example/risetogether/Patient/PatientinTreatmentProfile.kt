@@ -117,7 +117,7 @@ fun PatientinTreatmentProfileContent() {
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
-                    patientCancerType = document.getString("CancerType") ?: ""
+                    patientCancerType = document.getString("PatCancerType") ?: ""
                     patientGender = document.getString("CancerPatientGender") ?: ""
                 }
             }
@@ -136,27 +136,11 @@ fun PatientinTreatmentProfileContent() {
         }
     }
 
+    var documentList by remember { mutableStateOf(listOf<com.google.firebase.firestore.DocumentSnapshot>()) } // ✅ Store documents
+
     LaunchedEffect(selectedCategory) {
         if (selectedCategory.isBlank()) return@LaunchedEffect
 
-        db.collection("AssistanceTaskCategories")
-            .whereEqualTo("AssistTaskCategoryName", selectedCategory)
-            .get()
-            .addOnSuccessListener { documents ->
-                val categoryID = documents.firstOrNull()?.getString("AssistTaskCategoryID") ?: ""
-                AssistTaskCatID = categoryID // ✅ Agora temos o ID correto da categoria de assistência
-
-                // 🔥 Exibir no console para depuração
-                println("✅ AssistTaskCatID encontrado: $AssistTaskCatID")
-            }
-            .addOnFailureListener { exception ->
-                println("❌ Erro ao buscar AssistTaskCatID: ${exception.message}")
-            }
-    }
-
-
-    // 🔥 Fetch Tasks when Category is Selected
-    LaunchedEffect(selectedCategory) {
         val categoryIDMap = mapOf(
             "Household" to "abc123",
             "Garden" to "def456",
@@ -166,19 +150,19 @@ fun PatientinTreatmentProfileContent() {
         val categoryID = categoryIDMap[selectedCategory] ?: return@LaunchedEffect
 
         db.collection("AssistanceTaskwithinCategory")
-            .whereEqualTo("AssistTaskCat", categoryID)
+            .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
-                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") } // Verifique o nome do campo!!
-                taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
-                selectedTask = taskOptions.firstOrNull() ?: ""
-                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
+                documentList = documents.documents // ✅ Save documents list
 
-                // Debug: Mostrar no Log do Android
-                println("🔥 Firestore Find Tasks: $tasks")
+                val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
+                taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
+
+                selectedTask = taskOptions.firstOrNull() ?: ""
+                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: "" // ✅ Set first task ID
             }
             .addOnFailureListener { exception ->
-                println("❌ Error no Task Founded: ${exception.message}")
+                println("❌ Error fetching tasks: ${exception.message}")
             }
     }
     Box(
@@ -236,133 +220,134 @@ fun PatientinTreatmentProfileContent() {
 
                 // 🔥 CONTAINER BRANCO ENVOLVENDO O CONTEÚDO
                 Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(8.dp, RoundedCornerShape(12.dp)) // 🔹 Adiciona sombra para destaque
-                    .background(Color.White, RoundedCornerShape(12.dp)) // 🔹 Fundo branco arredondado
-                    .padding(16.dp) // 🔹 Espaçamento interno
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Create Profile Record with Required Assistance", fontSize = 18.sp, color = Color.Black)
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text("Hello, $patientName $patientSurname", fontSize = 20.sp, color = Color.Black)
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    "Please, select an option from each of the following pull-down menus, that best describes the type of assistance you may require:",
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // 🔥 Dropdown 1: Assistance Task Category
-            Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
-            ExposedDropdownMenuBox(
-                expanded = categoryExpanded,
-                onExpandedChange = { categoryExpanded = !categoryExpanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedCategory,
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier.menuAnchor(),
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) }
-                )
-                ExposedDropdownMenu(
-                    expanded = categoryExpanded,
-                    onDismissRequest = { categoryExpanded = false }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(8.dp, RoundedCornerShape(12.dp)) // 🔹 Adiciona sombra para destaque
+                        .background(Color.White, RoundedCornerShape(12.dp)) // 🔹 Fundo branco arredondado
+                        .padding(16.dp) // 🔹 Espaçamento interno
                 ) {
-                    assistanceOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                selectedCategory = option
-                                categoryExpanded = false
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Create Profile Record with Required Assistance", fontSize = 18.sp, color = Color.Black)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text("Hello, $patientName $patientSurname", fontSize = 20.sp, color = Color.Black)
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            "Please, select an option from each of the following pull-down menus, that best describes the type of assistance you may require:",
+                            fontSize = 16.sp,
+                            color = Color.Black
+                        )
+
+
+                        Spacer(modifier = Modifier.height(30.dp))
+
+                        // 🔥 Dropdown 1: Assistance Task Category
+                        Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
+                        ExposedDropdownMenuBox(
+                            expanded = categoryExpanded,
+                            onExpandedChange = { categoryExpanded = !categoryExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedCategory,
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.menuAnchor(),
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) }
+                            )
+                            ExposedDropdownMenu(
+                                expanded = categoryExpanded,
+                                onDismissRequest = { categoryExpanded = false }
+                            ) {
+                                assistanceOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            selectedCategory = option
+                                            categoryExpanded = false
+                                        }
+                                    )
+                                }
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // 🔥 Dropdown 2: Assistance Task within Selected Category
+                        Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
+                        ExposedDropdownMenuBox(
+                            expanded = taskExpanded,
+                            onExpandedChange = { taskExpanded = !taskExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedTask,
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.menuAnchor(),
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = taskExpanded) }
+                            )
+                            ExposedDropdownMenu(
+                                expanded = taskExpanded,
+                                onDismissRequest = { taskExpanded = false }
+                            ) {
+                                taskOptions.forEachIndexed { index, option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            selectedTask = option
+                                            selectedTaskID = documentList.getOrNull(index)?.getString("AssistTaskID") ?: "" // ✅ Update Task ID
+                                            taskExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // 🔥 Dropdown 3: Number of Days
+                        Text("Number of Days Selected Assistance Task Required per Week::", fontSize = 16.sp, color = Color.Black)
+                        ExposedDropdownMenuBox(
+                            expanded = daysExpanded,
+                            onExpandedChange = { daysExpanded = !daysExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedDays,
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.menuAnchor(),
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = daysExpanded) }
+                            )
+                            ExposedDropdownMenu(
+                                expanded = daysExpanded,
+                                onDismissRequest = { daysExpanded = false }
+                            ) {
+                                daysOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            selectedDays = option
+                                            daysExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    } // 🔹 FECHA O BOX AQUI!
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 🔥 Exibir mensagem de erro no centro da tela
+                    errorMessage?.let {
+                        Text(
+                            text = it,
+                            color = Color.Red,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(16.dp)
                         )
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 🔥 Dropdown 2: Assistance Task within Selected Category
-            Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
-            ExposedDropdownMenuBox(
-                expanded = taskExpanded,
-                onExpandedChange = { taskExpanded = !taskExpanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedTask,
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier.menuAnchor(),
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = taskExpanded) }
-                )
-                ExposedDropdownMenu(
-                    expanded = taskExpanded,
-                    onDismissRequest = { taskExpanded = false }
-                ) {
-                    taskOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                selectedTask = option
-                                taskExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // 🔥 Dropdown 3: Number of Days
-            Text("Number of Days Selected Assistance Task Required per Week::", fontSize = 16.sp, color = Color.Black)
-            ExposedDropdownMenuBox(
-                expanded = daysExpanded,
-                onExpandedChange = { daysExpanded = !daysExpanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedDays,
-                    onValueChange = {},
-                    readOnly = true,
-                    modifier = Modifier.menuAnchor(),
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = daysExpanded) }
-                )
-                ExposedDropdownMenu(
-                    expanded = daysExpanded,
-                    onDismissRequest = { daysExpanded = false }
-                ) {
-                    daysOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                selectedDays = option
-                                daysExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-                } // 🔹 FECHA O BOX AQUI!
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 🔥 Exibir mensagem de erro no centro da tela
-            errorMessage?.let {
-                Text(
-                    text = it,
-                    color = Color.Red,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-                }
-            Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 @Composable
                 fun GradientButton(text: String, onClick: () -> Unit) {
                     Button(
@@ -412,9 +397,9 @@ fun PatientinTreatmentProfileContent() {
                     val patientData = hashMapOf(
                         "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // PK correto
                         "CancerPatientID" to userId, // FK correto
-                        "CancerType" to patientCancerType,
+                        "PatCancerType" to patientCancerType,
                         "CancerPatientGender" to patientGender,
-                        "AssistTaskCategoryID" to selectedCategory, // FK correto
+                        "AssistTaskCatID" to selectedCategory, // FK correto
                         "AssistTaskID" to selectedTaskID, // ✅ Agora estamos salvando o ID da tarefa, não o nome!
                         "NoOfDaysPerWeek" to selectedDays
                     )
@@ -450,7 +435,7 @@ fun PatientinTreatmentProfileContent() {
                 }
 
 
-        }
+            }
         }
     }
 }

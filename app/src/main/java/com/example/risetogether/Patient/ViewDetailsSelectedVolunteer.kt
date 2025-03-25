@@ -20,86 +20,98 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 
+
+
+data class VolunteerDayAvailability(
+    val dayLabel: String,
+    val amTime: String,
+    val pmTime: String
+)
+
 class ViewDetailsSelectedVolunteer : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Get volunteer name from previous screen
-        val volunteerName = intent.getStringExtra("volunteerName") ?: ""
+        val volunteerID = intent.getStringExtra("volunteerID") ?: ""
+        val volunteerProfileID = intent.getStringExtra("volunteerProfileID") ?: ""
+        val selectedTaskID = intent.getStringExtra("selectedTaskID") ?: ""
+        val selectedTaskCatID = intent.getStringExtra("selectedTaskCatID") ?: ""
 
         setContent {
-            ViewDetailsSelectedVolunteerScreen(volunteerName)
+            ViewDetailsSelectedVolunteerScreen(
+                volunteerID = volunteerID,
+                volunteerProfileID = volunteerProfileID,
+                selectedTaskID = selectedTaskID,
+                selectedTaskCatID = selectedTaskCatID
+            )
         }
     }
 }
 
 @Composable
-fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
+fun ViewDetailsSelectedVolunteerScreen(
+    volunteerID: String,
+    volunteerProfileID: String,
+    selectedTaskID: String,
+    selectedTaskCatID: String
+) {
     val db = FirebaseFirestore.getInstance()
     val context = LocalContext.current
 
-    // Volunteer Details State
     var email by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
-    var cancerType by remember { mutableStateOf("") }
+    var voluncancertype by remember { mutableStateOf("") }
     var selectedTask by remember { mutableStateOf("") }
-
-    // Availability State
-    var day1AM by remember { mutableStateOf(false) }
-    var day1PM by remember { mutableStateOf(false) }
-    var day2AM by remember { mutableStateOf(false) }
-    var day2PM by remember { mutableStateOf(false) }
-
-    // Selected Date
+    var volunteerNameDisplayed by remember { mutableStateOf("") }
+    val availabilityList = remember { mutableStateListOf<VolunteerDayAvailability>() }
     var selectedDate by remember { mutableStateOf("") }
 
-    // Fetch Volunteer Data from Firestore
-    LaunchedEffect(volunteerName) {
-        if (volunteerName.isNotBlank()) {
-            val nameParts = volunteerName.split(" ") // Split "Brian Obrien" into ["Brian", "Obrien"]
-            val firstName = nameParts.getOrNull(0) ?: ""
-            val lastName = nameParts.getOrNull(1) ?: ""
 
+
+    // Fetch Volunteer Data from Firestore
+    LaunchedEffect(volunteerID) {
+        if (volunteerID.isNotBlank()) {
             db.collection("VolunteeringCancerSurvivor")
-                .whereEqualTo("VolunteerName", firstName)
-                .whereEqualTo("VolunteerSurname", lastName) // Ensure last name is also checked
+                .whereEqualTo("VolunteerID", volunteerID)
                 .get()
                 .addOnSuccessListener { documents ->
                     if (!documents.isEmpty) {
-                        val document = documents.documents.first()
+                        val document = documents.first()
+                        volunteerNameDisplayed = "${document.getString("VolunteerName") ?: ""} ${document.getString("VolunteerSurname") ?: ""}"
                         email = document.getString("VolunteerUsername") ?: "Not Available"
-                        mobile = document.getString("VolunteerMobileNO") ?: "Not Available"
-                        gender = document.getString("VolunteerGender") ?: "Not Available"
-                        cancerType = document.getString("CancerType") ?: "Not Available"
-                        val volunteerID = document.getString("VolunteerID") ?: ""
+                        mobile = document.getString("VolunMobile") ?: "Not Available"
+                        gender = document.getString("VolunGender") ?: "Not Available"
+                        voluncancertype = document.getString("VolunCancerType") ?: "Not Available"
 
-                        if (volunteerID.isNotEmpty()) {
-                            // Fetch Task Assistance based on VolunteerID
-                            db.collection("VolunteeringSurvivorProfilewithAssistTask&Category")
-                                .whereEqualTo("VolunteerID", volunteerID)
-                                .get()
-                                .addOnSuccessListener { taskDocs ->
-                                    if (!taskDocs.isEmpty) {
-                                        val taskDoc = taskDocs.documents.first()
-                                        val assistTaskID = taskDoc.getString("AssistTaskID") ?: "Not Available"
+                        // Get Task Name
+                        db.collection("AssistanceTaskwithinCategory")
+                            .whereEqualTo("AssistTaskID", selectedTaskID)
+                            .get()
+                            .addOnSuccessListener { taskDocs ->
+                                selectedTask = taskDocs.firstOrNull()?.getString("AssistanceTaskNam") ?: "Task Not Found"
+                            }
 
-                                        // Fetch the actual Task Name from AssistanceTaskwithinCategory
-                                        db.collection("AssistanceTaskwithinCategory")
-                                            .whereEqualTo("AssistTaskID", assistTaskID)
-                                            .get()
-                                            .addOnSuccessListener { taskNameDocs ->
-                                                if (!taskNameDocs.isEmpty) {
-                                                    selectedTask = taskNameDocs.documents.first().getString("AssistanceTaskNam") ?: "Not Available"
-                                                } else {
-                                                    selectedTask = "Task Not Found"
-                                                }
-                                            }
-                                    } else {
-                                        selectedTask = "No Assigned Task"
+                        // Get Availability
+                        db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
+                            .whereEqualTo("VolunteerProfileID", volunteerProfileID)
+                            .whereEqualTo("AssistTaskID", selectedTaskID)
+                            .whereEqualTo("AssistTaskCatID", selectedTaskCatID)
+                            .get()
+                            .addOnSuccessListener { scheduleDocs ->
+                                if (!scheduleDocs.isEmpty) {
+                                    val scheduleMap = scheduleDocs.first().get("Schedule") as? Map<String, Map<String, Any>>
+                                    availabilityList.clear()
+                                    scheduleMap?.forEach { (_, dayData) ->
+                                        val dayLabel = dayData["Day"] as? String ?: ""
+                                        val am = dayData["AMTime"] as? String ?: ""
+                                        val pm = dayData["PMTime"] as? String ?: ""
+                                        if (dayLabel.isNotEmpty()) {
+                                            availabilityList.add(VolunteerDayAvailability(dayLabel, am, pm))
+                                        }
                                     }
                                 }
-                        }
+                            }
                     } else {
                         Toast.makeText(context, "No volunteer found!", Toast.LENGTH_SHORT).show()
                     }
@@ -110,7 +122,6 @@ fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -119,48 +130,34 @@ fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
         contentAlignment = Alignment.TopCenter
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "View Details of Selected Volunteer", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("View Details of Selected Volunteer", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Volunteer Details
-            VolunteerInfoRow("Volunteer Name:", "$volunteerName")
+            VolunteerInfoRow("Volunteer Name:", volunteerNameDisplayed)
             VolunteerInfoRow("Email Address:", email)
             VolunteerInfoRow("Mobile Number:", mobile)
             VolunteerInfoRow("Gender:", gender)
-            VolunteerInfoRow("Cancer Type:", cancerType)
+            VolunteerInfoRow("Cancer Type:", voluncancertype)
             VolunteerInfoRow("Selected Task for Assistance:", selectedTask)
 
             Spacer(modifier = Modifier.height(20.dp))
-
             // Volunteer Availability Section
             Text("Volunteer Availability:", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Day 1
-            Text("Day 1 Availability")
-            Row {
-                Checkbox(checked = day1AM, onCheckedChange = { day1AM = it })
-                Text("AM")
-                Spacer(modifier = Modifier.width(16.dp))
-                Checkbox(checked = day1PM, onCheckedChange = { day1PM = it })
-                Text("PM")
+            availabilityList.forEachIndexed { index, item ->
+                Column {
+                    Text("Day ${index + 1}: ${item.dayLabel}", fontWeight = FontWeight.SemiBold)
+                    if (item.amTime.isNotBlank()) {
+                        Text("AM Time: ${item.amTime}")
+                    }
+                    if (item.pmTime.isNotBlank()) {
+                        Text("PM Time: ${item.pmTime}")
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Day 2
-            Text("Day 2 Availability")
-            Row {
-                Checkbox(checked = day2AM, onCheckedChange = { day2AM = it })
-                Text("AM")
-                Spacer(modifier = Modifier.width(16.dp))
-                Checkbox(checked = day2PM, onCheckedChange = { day2PM = it })
-                Text("PM")
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Calendar Picker
             Text("Select Week Commencing Date:", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = {
@@ -178,13 +175,11 @@ fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Action Buttons
             Button(onClick = {
-                if (selectedDate.isEmpty() || (!day1AM && !day1PM && !day2AM && !day2PM)) {
-                    Toast.makeText(context, "Please select a date and availability", Toast.LENGTH_SHORT).show()
+                if (selectedDate.isEmpty() || availabilityList.isEmpty()) {
+                    Toast.makeText(context, "Please select a date and check availability", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, "Request Placed Successfully!", Toast.LENGTH_SHORT).show()
-                    // Navigate to next screen if needed
                 }
             }) {
                 Text("Place Request for Assistance")
@@ -193,7 +188,7 @@ fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Button(onClick = {
-                // Navigate back to volunteer list
+                // TODO: Back to list of volunteers
             }) {
                 Text("Back to List of Volunteers")
             }
@@ -201,7 +196,7 @@ fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Button(onClick = {
-                // Navigate back to Dashboard
+                // TODO: Back to Dashboard
             }) {
                 Text("Back to Dashboard")
             }
@@ -209,7 +204,6 @@ fun ViewDetailsSelectedVolunteerScreen(volunteerName: String) {
     }
 }
 
-// Helper Composable to display volunteer details
 @Composable
 fun VolunteerInfoRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

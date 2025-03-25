@@ -14,15 +14,22 @@ import androidx.compose.ui.text.font.FontWeight
 
 // 🔹 Button for Patients (Light Blue → Blue)
 @Composable
-fun PatientButton(text: String, onClick: () -> Unit) {
+fun PatientButton(
+    text: String,
+    modifier: Modifier = Modifier, // ✅ O Modifier precisa estar aqui
+    onClick: () -> Unit
+) {
     ElevatedGradientButton(
         text = text,
         gradient = Brush.linearGradient(
-            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // Light Blue → Blue
+            colors = listOf(Color(0xFFB3E5FC), Color(0xFF64B5F6))
         ),
-        onClick = onClick
+        onClick = onClick,
+        modifier = modifier // ✅ O Modifier precisa ser passado para ElevatedGradientButton
     )
 }
+
+
 
 // 🔹 Button for Volunteers (Blue → White)
 @Composable
@@ -30,7 +37,7 @@ fun VolunteerButton(text: String, onClick: () -> Unit) {
     ElevatedGradientButton(
         text = text,
         gradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF42A5F5), Color(0xFF00C9A7)) // Blue → White
+            colors = listOf(Color(0xFF90CAF9), Color(0xFF81C784)) // Blue → White
         ),
         onClick = onClick
     )
@@ -42,7 +49,7 @@ fun DoctorButton(text: String, onClick: () -> Unit) {
     ElevatedGradientButton(
         text = text,
         gradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF42A5F5), Color(0xFF7E57C2)) // Blue → Purple
+            colors = listOf(Color(0xFFEDE7F6), Color(0xFFB39DDB)) // Blue → Purple
         ),
         onClick = onClick
     )
@@ -50,19 +57,36 @@ fun DoctorButton(text: String, onClick: () -> Unit) {
 
 // ✨ Base Button with Gradient
 @Composable
-fun ElevatedGradientButton(text: String, gradient: Brush, onClick: () -> Unit) {
-    ElevatedButton(
-        onClick = onClick,
-        shape = RoundedCornerShape(14.dp), // Softer rounded edges
-        colors = ButtonDefaults.elevatedButtonColors(containerColor = Color.Transparent),
-        modifier = Modifier
-            .fillMaxWidth(0.85f) // Slightly wider for better presence
-            .height(52.dp) // Increased height for better usability
-            .background(brush = gradient, shape = RoundedCornerShape(14.dp)) // Gradient effect
-            .padding(4.dp)
+fun ElevatedGradientButton(
+    text: String,
+    gradient: Brush,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier // ✅ Precisa estar aqui!
+) {
+    Box( // ✅ Usamos Box para permitir aplicar o Modifier corretamente
+        modifier = modifier
+            .fillMaxWidth(0.85f)
+            .height(52.dp)
+            .background(brush = gradient, shape = RoundedCornerShape(14.dp))
     ) {
-        Text(text, fontSize = 19.sp, color = Color.Black, fontWeight = FontWeight.Bold )
+        ElevatedButton(
+            onClick = onClick,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.elevatedButtonColors(containerColor = Color.Transparent),
+            modifier = Modifier.fillMaxSize() // ✅ Permite que o botão ocupe toda a Box
+        ) {
+            Text(
+                text = text,
+                fontSize = 19.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
+
+
+
+
 
 
