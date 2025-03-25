@@ -78,6 +78,8 @@ fun ViewListVolunteersScreenContent() {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
+    var volunteerNameToProfileID by remember { mutableStateOf(mapOf<String, String>()) }
+
     var selectedCategory by remember { mutableStateOf("") }
     var taskOptions by remember { mutableStateOf(listOf<String>()) }
     var selectedTask by remember { mutableStateOf("") }
@@ -161,12 +163,21 @@ fun ViewListVolunteersScreenContent() {
         println("   👉 Gênero do Paciente: $patientGender")
 
         db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory")
-            .whereEqualTo("AssistTaskID", selectedTaskID) // 🔥 Agora a busca usa a TaskID correta
+            .whereEqualTo("AssistTaskID", selectedTaskID)
             .whereEqualTo("AssistTaskCatID", selectedCategory)
             .get()
             .addOnSuccessListener { documents ->
-                val volunteerIDs = documents.mapNotNull { it.getString("VolunteerID") }
+                val volunteerIDs = mutableListOf<String>()
+                val profileMap = mutableMapOf<String, String>()
 
+                documents.forEach { doc ->
+                    val volunteerID = doc.getString("VolunteerID")
+                    val profileID = doc.getString("VolunteerProfileID")
+                    if (volunteerID != null && profileID != null) {
+                        volunteerIDs.add(volunteerID)
+                        profileMap[volunteerID] = profileID
+                    }
+                }
 
                 if (volunteerIDs.isEmpty()) {
                     println("❌ Nenhum voluntário encontrado para essa tarefa e categoria.")
@@ -180,17 +191,25 @@ fun ViewListVolunteersScreenContent() {
                     .whereEqualTo("VolunGender", patientGender.trim())
                     .get()
                     .addOnSuccessListener { volunteerDocs ->
-                        val volunteers = volunteerDocs.mapNotNull {
-                            val name = it.getString("VolunteerName")
-                            val surname = it.getString("VolunteerSurname")
-                            if (name != null && surname != null) "$name $surname" else null
+                        val nameToProfile = mutableMapOf<String, String>()
+                        val volunteerList = mutableListOf<String>()
+
+                        volunteerDocs.forEach { doc ->
+                            val name = doc.getString("VolunteerName") ?: return@forEach
+                            val surname = doc.getString("VolunteerSurname") ?: return@forEach
+                            val volunteerID = doc.getString("VolunteerID") ?: return@forEach
+                            val fullName = "$name $surname"
+
+                            val profileID = profileMap[volunteerID] ?: return@forEach
+                            volunteerList.add(fullName)
+                            nameToProfile[fullName] = profileID
                         }
 
-                        volunteerOptions = volunteers
+                        volunteerOptions = volunteerList
+                        volunteerNameToProfileID = nameToProfile
                     }
             }
     }
-
    // Layout and UI
     Box(
         modifier = Modifier
@@ -347,12 +366,30 @@ fun ViewListVolunteersScreenContent() {
                                                             .addOnSuccessListener {
                                                                 Toast.makeText(context, "Volunteer Assigned Successfully!", Toast.LENGTH_LONG).show()
 
-                                                                // 🔥 Abrir a próxima tela com detalhes do voluntário
-                                                                Handler(Looper.getMainLooper()).postDelayed({
-                                                                    val intent = Intent(context, ViewDetailsSelectedVolunteer::class.java)
-                                                                    intent.putExtra("volunteerID", selectedVolunteerID)
-                                                                    context.startActivity(intent)
-                                                                }, 2000)
+                                                                db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory")
+                                                                    .whereEqualTo("VolunteerID", selectedVolunteerID)
+                                                                    .whereEqualTo("AssistTaskID", selectedTaskID)
+                                                                    .whereEqualTo("AssistTaskCatID", selectedCategory)
+                                                                    .get()
+                                                                    .addOnSuccessListener { profileDocs ->
+                                                                        if (!profileDocs.isEmpty) {
+                                                                            val volunteerProfileID = volunteerNameToProfileID[selectedVolunteer] ?: ""
+
+                                                                            Handler(Looper.getMainLooper()).postDelayed({
+                                                                                val intent = Intent(context, ViewDetailsSelectedVolunteer::class.java)
+                                                                                intent.putExtra("volunteerID", selectedVolunteerID)
+                                                                                intent.putExtra("selectedTaskID", selectedTaskID)
+                                                                                intent.putExtra("selectedTaskCatID", selectedCategory)
+                                                                                intent.putExtra("volunteerProfileID", volunteerProfileID)
+                                                                                context.startActivity(intent)
+                                                                            }, 2000)
+                                                                        } else {
+                                                                            Toast.makeText(context, "Volunteer Profile not found!", Toast.LENGTH_SHORT).show()
+                                                                        }
+                                                                    }
+                                                                    .addOnFailureListener {
+                                                                        Toast.makeText(context, "Failed to load Volunteer Profile ID", Toast.LENGTH_SHORT).show()
+                                                                    }
                                                             }
                                                     } else {
                                                         println("❌ Voluntário Not Founded!")

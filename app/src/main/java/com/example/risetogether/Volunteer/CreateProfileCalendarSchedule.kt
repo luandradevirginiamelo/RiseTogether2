@@ -38,6 +38,8 @@ class CreateProfileCalendarScheduleActivity : ComponentActivity() {
 fun CreateProfileCalendarSchedule() {
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val currentVolunteerID = auth.currentUser?.uid ?: ""
 
     var selectedTaskName by remember { mutableStateOf("") }
     var selectedTaskCategory by remember { mutableStateOf("") }
@@ -95,8 +97,8 @@ fun CreateProfileCalendarSchedule() {
         Text("Schedule Assistance Task", fontSize = 22.sp, color = Color.Black)
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Assistance Task: $selectedTaskName", fontSize = 18.sp, color = Color.Black)
-        Text("Category: $selectedTaskCategory", fontSize = 16.sp, color = Color.Black)
+        Text("Assistance Task Name: $selectedTaskName", fontSize = 18.sp, color = Color.Black)
+        Text("Assistance Task Category: $selectedTaskCategory", fontSize = 16.sp, color = Color.Black)
         Spacer(modifier = Modifier.height(16.dp))
 
         // 🔥 Generate fields dynamically based on selected days
@@ -106,7 +108,7 @@ fun CreateProfileCalendarSchedule() {
             var selectedAMTime by remember { mutableStateOf("") }
             var selectedPMTime by remember { mutableStateOf("") }
 
-            Text("Day $dayNumber Availability", fontSize = 16.sp, color = Color.Black)
+            Text("Day $dayNumber of the Week Availability:", fontSize = 16.sp, color = Color.Black)
 
             DropdownField(
                 label = "Select Day",
@@ -152,12 +154,19 @@ fun CreateProfileCalendarSchedule() {
                     return@Button
                 }
 
-                isSaving = true
-                errorMessage = null
+                // ✅ Check if at least one of the time is selected!
+                val hasAtLeastOneTimeSelected = schedule.values.any {
+                    !it.second.isNullOrBlank() || !it.third.isNullOrBlank()
+                }
+                if (!hasAtLeastOneTimeSelected) {
+                    errorMessage = "Please select at least one AM or PM time for the week!"
+                    return@Button
+                }
 
                 val scheduleData = hashMapOf(
                     "VolunteerCalendarProfileScheduleID" to "", // 🔥 This will be updated after Firestore generates the ID
                     "VolunteerProfileID" to volunteerProfileID,
+                    "VolunteerID" to currentVolunteerID, // ✅🔥 AQUI ESTÁ A CHAVE!
                     "AssistTaskCatID" to assistTaskCatID, // ✅ Matching TaskCatID
                     "AssistTaskID" to assistTaskID, // ✅ Matching TaskID
                     "DaysSelected" to selectedDays,

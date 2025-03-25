@@ -397,7 +397,7 @@ fun PatientinTreatmentProfileContent() {
                     val patientData = hashMapOf(
                         "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // PK correto
                         "CancerPatientID" to userId, // FK correto
-                        "CancerType" to patientCancerType,
+                        "PatCancerType" to patientCancerType,
                         "CancerPatientGender" to patientGender,
                         "AssistTaskCatID" to selectedCategory, // FK correto
                         "AssistTaskID" to selectedTaskID, // ✅ Agora estamos salvando o ID da tarefa, não o nome!

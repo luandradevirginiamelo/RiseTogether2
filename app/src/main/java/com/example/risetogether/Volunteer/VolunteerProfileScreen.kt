@@ -32,6 +32,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.risetogether.VolunteerLoginScreen
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 
@@ -215,7 +216,7 @@ fun VolunteerProfileScreenContent() {
                                 text = "Logout",
                                 onClick = {
                                     auth.signOut()
-                                    context.startActivity(Intent(context, PatientLoginScreen::class.java))
+                                    context.startActivity(Intent(context, VolunteerLoginScreen::class.java))
                                 }
                             )
                         }
