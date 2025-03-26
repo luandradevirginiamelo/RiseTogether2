@@ -25,7 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-val LightPurple = Color(0xFFB39DDB) // roxinho claro (você pode ajustar o tom)
+
+val BlueMedium = Color(0xFF007AFF)
 
 data class VolunteerDayAvailability(
     val dayLabel: String,
@@ -78,7 +79,8 @@ fun ViewDetailsSelectedVolunteerScreen(
     var voluncancertype by remember { mutableStateOf("") }
     var selectedTask by remember { mutableStateOf("") }
     var volunteerNameDisplayed by remember { mutableStateOf("") }
-    val availabilityList = remember { mutableStateListOf<VolunteerDayAvailability>() }
+
+    // Find the selected days
     val daySelections = remember {
         mutableStateListOf(
             DaySelection("Monday"),
@@ -88,6 +90,14 @@ fun ViewDetailsSelectedVolunteerScreen(
             DaySelection("Friday")
         )
     }
+
+    val availabilityList = remember { mutableStateListOf<VolunteerDayAvailability>() }
+
+// ✅ Só depois disso você pode fazer o filter/map:
+    val selectedDays = daySelections.filter { it.isSelectedDay }.map { it.dayLabel }
+
+    val day1 = selectedDays.getOrNull(0) ?: ""
+    val day2 = selectedDays.getOrNull(1) ?: ""
     var selectedDate by remember { mutableStateOf("") }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -121,12 +131,14 @@ fun ViewDetailsSelectedVolunteerScreen(
                             .get()
                             .addOnSuccessListener { scheduleDocs ->
                                 if (!scheduleDocs.isEmpty) {
-                                    val scheduleMap = scheduleDocs.first().get("Schedule") as? Map<String, Map<String, Any>>
+                                    val scheduleRaw = scheduleDocs.first().get("Schedule")
+                                    val scheduleMap = scheduleRaw as? Map<String, *>
                                     availabilityList.clear()
-                                    scheduleMap?.forEach { (_, dayData) ->
-                                        val dayLabel = dayData["Day"] as? String ?: ""
-                                        val am = dayData["AMTime"] as? String ?: ""
-                                        val pm = dayData["PMTime"] as? String ?: ""
+                                    scheduleMap?.forEach { (_, dayDataAny) ->
+                                        val dayData = dayDataAny as? Map<String, *>
+                                        val dayLabel = dayData?.get("Day") as? String ?: ""
+                                        val am = dayData?.get("AMTime") as? String ?: ""
+                                        val pm = dayData?.get("PMTime") as? String ?: ""
                                         if (dayLabel.isNotEmpty()) {
                                             availabilityList.add(VolunteerDayAvailability(dayLabel, am, pm))
                                         }
@@ -153,7 +165,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     ) {
         item {
             Text(
-                "Volunteer Profile",
+                "View Details of Selected Volunteer",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF007AFF)
@@ -221,7 +233,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                     selection.isSelectedDay = !selection.isSelectedDay
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selection.isSelectedDay) LightPurple else MaterialTheme.colorScheme.primary
+                                    containerColor = if (selection.isSelectedDay) BlueMedium else MaterialTheme.colorScheme.primary
                                 ),
                                 modifier = Modifier.height(36.dp)
                             ) {
@@ -252,7 +264,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (selection.isSelectedAM) LightPurple else MaterialTheme.colorScheme.primary
+                                        containerColor = if (selection.isSelectedAM) BlueMedium else MaterialTheme.colorScheme.primary
                                     ),
                                     modifier = Modifier.height(36.dp),
                                     enabled = !selection.isSelectedPM
@@ -285,7 +297,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (selection.isSelectedPM) LightPurple else MaterialTheme.colorScheme.primary
+                                        containerColor = if (selection.isSelectedPM) BlueMedium else MaterialTheme.colorScheme.primary
                                     ),
                                     modifier = Modifier.height(36.dp),
                                     enabled = !selection.isSelectedAM
@@ -318,14 +330,23 @@ fun ViewDetailsSelectedVolunteerScreen(
                     onClick = {
                         DatePickerDialog(
                             context,
-                            { _, selectedYear, selectedMonth, selectedDay ->
+                            { _, selectedYear, selectedMonth, selectedDayOfMonth ->
                                 val selectedCal = Calendar.getInstance().apply {
-                                    set(selectedYear, selectedMonth, selectedDay)
+                                    set(selectedYear, selectedMonth, selectedDayOfMonth)
                                 }
-                                if (selectedCal.before(Calendar.getInstance())) {
+
+                                val dayOfWeek = selectedCal.get(Calendar.DAY_OF_WEEK)
+                                if (dayOfWeek != Calendar.MONDAY) {
+                                    errorMessage = "Please select a Monday only."
+                                } else if (selectedCal.before(Calendar.getInstance())) {
                                     errorMessage = "You cannot select a past date."
                                 } else {
-                                    selectedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
+                                    val formatted = "%02d/%02d/%02d".format(
+                                        selectedDayOfMonth,
+                                        selectedMonth + 1,
+                                        selectedYear % 100
+                                    )
+                                    selectedDate = formatted
                                     errorMessage = null
                                 }
                             },
@@ -333,9 +354,13 @@ fun ViewDetailsSelectedVolunteerScreen(
                             month,
                             day
                         ).show()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = BlueMedium)
                 ) {
-                    Text(if (selectedDate.isEmpty()) "Choose Date" else selectedDate)
+                    Text(
+                        if (selectedDate.isEmpty()) "📅 Choose Monday" else "📅 $selectedDate",
+                        color = Color.White
+                    )
                 }
 
                 // Mensagem de erro visível
@@ -402,6 +427,8 @@ fun ViewDetailsSelectedVolunteerScreen(
                             "VolunteerID" to volunteerID,
                             "SelectedTaskID" to selectedTaskID,
                             "WeekStartDate" to selectedDate,
+                            "Day1" to day1,
+                            "Day2" to day2,
                             "SelectedAvailability" to selectedAvailability
                         )
 
