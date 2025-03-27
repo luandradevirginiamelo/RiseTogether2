@@ -1,6 +1,5 @@
 package com.example.risetogether.Patient
 
-
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -10,10 +9,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -23,8 +26,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import java.util.Date
 
+// 🔹 Cor padrão do app
 val BlueMedium = Color(0xFF007AFF)
 
 data class VolunteerDayAvailability(
@@ -60,6 +64,7 @@ class ViewDetailsSelectedVolunteer : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewDetailsSelectedVolunteerScreen(
     volunteerID: String,
@@ -94,6 +99,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     val day1 = selectedDays.getOrNull(0) ?: ""
     val day2 = selectedDays.getOrNull(1) ?: ""
 
+    // 🔸 Fetch Data
     LaunchedEffect(volunteerID) {
         if (volunteerID.isNotBlank()) {
             db.collection("VolunteeringCancerSurvivor")
@@ -146,265 +152,292 @@ fun ViewDetailsSelectedVolunteerScreen(
         }
     }
 
+    // 🔸 UI Layout (Modal style)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(16.dp)
+            .background(Color(0xFFEEF4FB))
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.95f),
+            shape = RoundedCornerShape(24.dp),
+            color = Color.White,
+            tonalElevation = 6.dp,
+            shadowElevation = 12.dp
         ) {
-            item {
-                Text(
-                    "View Details of Selected Volunteer",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BlueMedium
-                )
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        ReadOnlyField("Name", volunteerNameDisplayed)
-                        ReadOnlyField("Email", email)
-                        ReadOnlyField("Mobile", mobile)
-                        ReadOnlyField("Gender", gender)
-                        ReadOnlyField("Cancer Type", voluncancertype)
-                        ReadOnlyField("Selected Task", selectedTask)
-                    }
-                }
-            }
-
-            item {
-                Text("Availability", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
-
-            itemsIndexed(availabilityList.take(5)) { index, item ->
-                val selection = daySelections[index]
-
-                Column(modifier = Modifier.fillMaxWidth()) {
-
-                    // 🔴 Mensagem de erro (caso exista)
-                    if (!selection.error.isNullOrEmpty()) {
-                        Text(
-                            text = selection.error ?: "",
-                            color = Color.Red,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .padding(bottom = 4.dp)
-                                .fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(listOf(Color(0xFFB3E5FC), BlueMedium))
                         )
+                        .padding(vertical = 12.dp, horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "Volunteer Details",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp)) {
+                                ReadOnlyField("Name", volunteerNameDisplayed)
+                                ReadOnlyField("Email", email)
+                                ReadOnlyField("Mobile", mobile)
+                                ReadOnlyField("Gender", gender)
+                                ReadOnlyField("Cancer Type", voluncancertype)
+                                ReadOnlyField("Selected Task", selectedTask)
+                            }
+                        }
                     }
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        elevation = CardDefaults.cardElevation(2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                    item {
+                        Text("Availability", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
 
-                            // DIA + BOTÃO SELECT
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
+                    itemsIndexed(availabilityList.take(5)) { index, item ->
+                        val selection = daySelections[index]
+
+                        Column(modifier = Modifier.fillMaxWidth()) {
+
+                            // 🔴 Mensagem de erro (caso exista)
+                            if (!selection.error.isNullOrEmpty()) {
                                 Text(
-                                    text = item.dayLabel,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.weight(1f)
+                                    text = selection.error ?: "",
+                                    color = Color.Red,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier
+                                        .padding(bottom = 4.dp)
+                                        .fillMaxWidth()
                                 )
-                                Button(
-                                    onClick = {
-                                        selection.isSelectedDay = !selection.isSelectedDay
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (selection.isSelectedDay) BlueMedium else MaterialTheme.colorScheme.primary
-                                    ),
-                                    modifier = Modifier.height(36.dp)
-                                ) {
-                                    Text(
-                                        if (selection.isSelectedDay) "Selected" else "Select",
-                                        color = Color.White
-                                    )
-                                }
                             }
 
-                            Spacer(Modifier.height(8.dp))
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
 
-                            // AM TIME + SELECT (se tiver valor)
-                            if (item.amTime.isNotEmpty()) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("AM: ${item.amTime}", modifier = Modifier.weight(1f))
-
-                                    Button(
-                                        onClick = {
-                                            if (selection.isSelectedAM) {
-                                                selection.isSelectedAM = false
-                                            } else {
-                                                selection.isSelectedAM = true
-                                                selection.isSelectedPM = false
-                                            }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (selection.isSelectedAM) BlueMedium else MaterialTheme.colorScheme.primary
-                                        ),
-                                        modifier = Modifier.height(36.dp),
-                                        enabled = !selection.isSelectedPM
+                                    // DIA + BOTÃO SELECT
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
-                                            if (selection.isSelectedAM) "Selected" else "Select",
-                                            color = Color.White
+                                            text = item.dayLabel,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.weight(1f)
                                         )
+                                        Button(
+                                            onClick = {
+                                                selection.isSelectedDay = !selection.isSelectedDay
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (selection.isSelectedDay) BlueMedium else MaterialTheme.colorScheme.primary
+                                            ),
+                                            modifier = Modifier
+                                                .defaultMinSize(minWidth = 80.dp)
+                                                .height(36.dp)
+                                        ) {
+                                            Text(
+                                                if (selection.isSelectedDay) "Selected" else "Select",
+                                                color = Color.White
+                                            )
+                                        }
                                     }
-                                }
-                            }
 
-                            Spacer(Modifier.height(8.dp))
+                                    Spacer(Modifier.height(8.dp))
 
-                            // PM TIME + SELECT (se tiver valor)
-                            if (item.pmTime.isNotEmpty()) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("PM: ${item.pmTime}", modifier = Modifier.weight(1f))
+                                    // AM TIME + SELECT (se tiver valor)
+                                    if (item.amTime.isNotEmpty()) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("AM: ${item.amTime}", modifier = Modifier.weight(1f))
 
-                                    Button(
-                                        onClick = {
-                                            if (selection.isSelectedPM) {
-                                                selection.isSelectedPM = false
-                                            } else {
-                                                selection.isSelectedPM = true
-                                                selection.isSelectedAM = false
+                                            Button(
+                                                onClick = {
+                                                    if (selection.isSelectedAM) {
+                                                        selection.isSelectedAM = false
+                                                    } else {
+                                                        selection.isSelectedAM = true
+                                                        selection.isSelectedPM = false
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = if (selection.isSelectedAM) BlueMedium else MaterialTheme.colorScheme.primary
+                                                ),
+                                                modifier = Modifier
+                                                    .defaultMinSize(minWidth = 80.dp)
+                                                    .height(36.dp),
+                                                enabled = !selection.isSelectedPM
+                                            ) {
+                                                Text(
+                                                    if (selection.isSelectedAM) "Selected" else "Select",
+                                                    color = Color.White
+                                                )
                                             }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (selection.isSelectedPM) BlueMedium else MaterialTheme.colorScheme.primary
-                                        ),
-                                        modifier = Modifier.height(36.dp),
-                                        enabled = !selection.isSelectedAM
-                                    ) {
-                                        Text(
-                                            if (selection.isSelectedPM) "Selected" else "Select",
-                                            color = Color.White
-                                        )
+                                        }
+                                    }
+
+                                    Spacer(Modifier.height(8.dp))
+
+                                    // PM TIME + SELECT (se tiver valor)
+                                    if (item.pmTime.isNotEmpty()) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("PM: ${item.pmTime}", modifier = Modifier.weight(1f))
+
+                                            Button(
+                                                onClick = {
+                                                    if (selection.isSelectedPM) {
+                                                        selection.isSelectedPM = false
+                                                    } else {
+                                                        selection.isSelectedPM = true
+                                                        selection.isSelectedAM = false
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = if (selection.isSelectedPM) BlueMedium else MaterialTheme.colorScheme.primary
+                                                ),
+                                                modifier = Modifier
+                                                    .defaultMinSize(minWidth = 80.dp)
+                                                    .height(36.dp),
+                                                enabled = !selection.isSelectedAM
+                                            ) {
+                                                Text(
+                                                    if (selection.isSelectedPM) "Selected" else "Select",
+                                                    color = Color.White
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }
 
 
-            item {
-                Spacer(Modifier.height(12.dp))
-                Text("Week Commencing Date", fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(4.dp))
-
-                Button(
-                    onClick = { showMondayPicker = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = BlueMedium)
-                ) {
-                    Text(
-                        if (selectedDate.isEmpty()) "📅 Calendar" else "📅 $selectedDate",
-                        color = Color.White
-                    )
-                }
-
-                if (!errorMessage.isNullOrEmpty()) {
-                    Text(
-                        text = errorMessage ?: "",
-                        color = Color.Red,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        var hasError = false
-                        daySelections.forEach { day ->
-                            if (day.isSelectedDay && !day.isSelectedAM && !day.isSelectedPM) {
-                                day.error = "Select AM or PM Time"
-                                hasError = true
-                            } else {
-                                day.error = null
-                            }
-                        }
-                        if (selectedDate.isEmpty()) {
-                            errorMessage = "Please select a date"
-                            hasError = true
-                        } else {
-                            errorMessage = null
-                        }
-
-                        if (!hasError) {
-                            val selectedAvailability = daySelections
-                                .filter { it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM) }
-                                .map {
-                                    mapOf(
-                                        "Day" to it.dayLabel,
-                                        "Time" to if (it.isSelectedAM) "AM" else "PM"
-                                    )
-                                }
-
-                            val requestData = hashMapOf(
-                                "VolunteerID" to volunteerID,
-                                "SelectedTaskID" to selectedTaskID,
-                                "WeekStartDate" to selectedDate,
-                                "Day1" to day1,
-                                "Day2" to day2,
-                                "SelectedAvailability" to selectedAvailability
+                    item {
+                        Text("Week Commencing Date", fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = { showMondayPicker = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = BlueMedium)
+                        ) {
+                            Text(
+                                if (selectedDate.isEmpty()) "📅 Choose Monday" else "📅 $selectedDate",
+                                color = Color.White
                             )
-
-                            db.collection("VolunteerRequests")
-                                .add(requestData)
-                                .addOnSuccessListener {
-                                    Toast.makeText(context, "Request submitted successfully!", Toast.LENGTH_SHORT).show()
-                                    val intent = Intent(context, SendRequestActivity::class.java)
-                                    context.startActivity(intent)
-                                }
-                                .addOnFailureListener {
-                                    Toast.makeText(context, "Failed to submit request", Toast.LENGTH_SHORT).show()
-                                }
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Place Request for Assistance")
-                }
 
-                OutlinedButton(
-                    onClick = { (context as? ComponentActivity)?.finish() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Back to List of Volunteers")
-                }
+                        if (!errorMessage.isNullOrEmpty()) {
+                            Text(
+                                text = errorMessage ?: "",
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
 
-                OutlinedButton(
-                    onClick = { (context as? ComponentActivity)?.finish() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Back to Dashboard")
+                    item {
+                        Button(
+                            onClick = {
+                                var hasError = false
+                                daySelections.forEach { day ->
+                                    if (day.isSelectedDay && !day.isSelectedAM && !day.isSelectedPM) {
+                                        day.error = "Select AM or PM Time"
+                                        hasError = true
+                                    } else {
+                                        day.error = null
+                                    }
+                                }
+                                if (selectedDate.isEmpty()) {
+                                    errorMessage = "Please select a date"
+                                    hasError = true
+                                } else {
+                                    errorMessage = null
+                                }
+
+                                if (!hasError) {
+                                    val selectedAvailability = daySelections.filter {
+                                        it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM)
+                                    }.map {
+                                        mapOf(
+                                            "Day" to it.dayLabel,
+                                            "Time" to if (it.isSelectedAM) "AM" else "PM"
+                                        )
+                                    }
+
+                                    val requestData = hashMapOf(
+                                        "VolunteerID" to volunteerID,
+                                        "SelectedTaskID" to selectedTaskID,
+                                        "WeekStartDate" to selectedDate,
+                                        "Day1" to day1,
+                                        "Day2" to day2,
+                                        "SelectedAvailability" to selectedAvailability
+                                    )
+
+                                    db.collection("VolunteerRequests")
+                                        .add(requestData)
+                                        .addOnSuccessListener {
+                                            Toast.makeText(context, "Request submitted successfully!", Toast.LENGTH_SHORT).show()
+                                            val intent = Intent(context, SendRequestActivity::class.java)
+                                            context.startActivity(intent)
+                                        }
+                                        .addOnFailureListener {
+                                            Toast.makeText(context, "Failed to submit request", Toast.LENGTH_SHORT).show()
+                                        }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Place Request for Assistance")
+                        }
+
+                        OutlinedButton(
+                            onClick = { (context as? ComponentActivity)?.finish() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text("Back to List of Volunteers")
+                        }
+
+                        OutlinedButton(
+                            onClick = { (context as? ComponentActivity)?.finish() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Text("Back to Dashboard")
+                        }
+                    }
                 }
             }
         }
@@ -433,6 +466,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     }
 }
 
+// 🔹 Modal calendar picker - only Mondays
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomMondayPicker(
@@ -466,17 +500,11 @@ fun CustomMondayPicker(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text("Select Monday (Week Commencing Date)", style = MaterialTheme.typography.titleLarge)
-
                 Spacer(modifier = Modifier.height(16.dp))
-
                 DatePicker(state = datePickerState)
-
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel")
-                    }
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
                     Button(onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
                             onDateSelected(Date(millis))
@@ -490,6 +518,7 @@ fun CustomMondayPicker(
     }
 }
 
+// 🔹 Read-only input fields
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReadOnlyField(label: String, value: String) {
