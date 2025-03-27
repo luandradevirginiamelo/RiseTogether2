@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -27,6 +29,45 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 import java.util.Date
+
+
+@Composable
+fun GradientButtonFullWidth(
+    text: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(75.dp)
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // Seu gradiente
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                fontSize = 20.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
+    }
+}
 
 // 🔹 Cor padrão do app
 val BlueMedium = Color(0xFF007AFF)
@@ -250,20 +291,28 @@ fun ViewDetailsSelectedVolunteerScreen(
                                             fontWeight = FontWeight.SemiBold,
                                             modifier = Modifier.weight(1f)
                                         )
-                                        Button(
-                                            onClick = {
-                                                selection.isSelectedDay = !selection.isSelectedDay
-                                            },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = if (selection.isSelectedDay) BlueMedium else MaterialTheme.colorScheme.primary
-                                            ),
+                                        Box(
                                             modifier = Modifier
-                                                .defaultMinSize(minWidth = 80.dp)
                                                 .height(36.dp)
+                                                .defaultMinSize(minWidth = 80.dp)
+                                                .background(
+                                                    brush = Brush.linearGradient(
+                                                        colors = if (selection.isSelectedDay)
+                                                            listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5), Color(0xFF9E9E9E))
+                                                        else listOf(Color(0xFF90CAF9), Color(0xFF1976D2))
+                                                    ),
+                                                    shape = RoundedCornerShape(6.dp)
+                                                )
+                                                .clickable {
+                                                    selection.isSelectedDay = !selection.isSelectedDay
+                                                },
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             Text(
-                                                if (selection.isSelectedDay) "Selected" else "Select",
-                                                color = Color.White
+                                                text = if (selection.isSelectedDay) "Selected" else "Select",
+                                                color = Color.Black,
+                                                fontSize = 14.sp,
+                                                modifier = Modifier.padding(horizontal = 12.dp)
                                             )
                                         }
                                     }
@@ -278,26 +327,33 @@ fun ViewDetailsSelectedVolunteerScreen(
                                         ) {
                                             Text("AM: ${item.amTime}", modifier = Modifier.weight(1f))
 
-                                            Button(
-                                                onClick = {
-                                                    if (selection.isSelectedAM) {
-                                                        selection.isSelectedAM = false
-                                                    } else {
-                                                        selection.isSelectedAM = true
-                                                        selection.isSelectedPM = false
-                                                    }
-                                                },
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = if (selection.isSelectedAM) BlueMedium else MaterialTheme.colorScheme.primary
-                                                ),
+                                            Box(
                                                 modifier = Modifier
+                                                    .height(36.dp)
                                                     .defaultMinSize(minWidth = 80.dp)
-                                                    .height(36.dp),
-                                                enabled = !selection.isSelectedPM
+                                                    .background(
+                                                        brush = Brush.linearGradient(
+                                                            colors = if (selection.isSelectedAM)
+                                                                listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5), Color(0xFF9E9E9E))
+                                                            else listOf(Color(0xFF90CAF9), Color(0xFF1976D2))
+                                                        ),
+                                                        shape = RoundedCornerShape(6.dp)
+                                                    )
+                                                    .clickable(enabled = !selection.isSelectedPM) {
+                                                        if (selection.isSelectedAM) {
+                                                            selection.isSelectedAM = false
+                                                        } else {
+                                                            selection.isSelectedAM = true
+                                                            selection.isSelectedPM = false
+                                                        }
+                                                    },
+                                                contentAlignment = Alignment.Center
                                             ) {
                                                 Text(
-                                                    if (selection.isSelectedAM) "Selected" else "Select",
-                                                    color = Color.White
+                                                    text = if (selection.isSelectedAM) "Selected" else "Select",
+                                                    color = Color.Black,
+                                                    fontSize = 14.sp,
+                                                    modifier = Modifier.padding(horizontal = 12.dp)
                                                 )
                                             }
                                         }
@@ -313,28 +369,36 @@ fun ViewDetailsSelectedVolunteerScreen(
                                         ) {
                                             Text("PM: ${item.pmTime}", modifier = Modifier.weight(1f))
 
-                                            Button(
-                                                onClick = {
-                                                    if (selection.isSelectedPM) {
-                                                        selection.isSelectedPM = false
-                                                    } else {
-                                                        selection.isSelectedPM = true
-                                                        selection.isSelectedAM = false
-                                                    }
-                                                },
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = if (selection.isSelectedPM) BlueMedium else MaterialTheme.colorScheme.primary
-                                                ),
+                                            Box(
                                                 modifier = Modifier
+                                                    .height(36.dp)
                                                     .defaultMinSize(minWidth = 80.dp)
-                                                    .height(36.dp),
-                                                enabled = !selection.isSelectedAM
+                                                    .background(
+                                                        brush = Brush.linearGradient(
+                                                            colors = if (selection.isSelectedPM)
+                                                                listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5), Color(0xFF9E9E9E))
+                                                            else listOf(Color(0xFF90CAF9), Color(0xFF1976D2))
+                                                        ),
+                                                        shape = RoundedCornerShape(6.dp)
+                                                    )
+                                                    .clickable(enabled = !selection.isSelectedAM) {
+                                                        if (selection.isSelectedPM) {
+                                                            selection.isSelectedPM = false
+                                                        } else {
+                                                            selection.isSelectedPM = true
+                                                            selection.isSelectedAM = false
+                                                        }
+                                                    },
+                                                contentAlignment = Alignment.Center
                                             ) {
                                                 Text(
-                                                    if (selection.isSelectedPM) "Selected" else "Select",
-                                                    color = Color.White
+                                                    text = if (selection.isSelectedPM) "Selected" else "Select",
+                                                    color = Color.Black,
+                                                    fontSize = 14.sp,
+                                                    modifier = Modifier.padding(horizontal = 12.dp)
                                                 )
                                             }
+
                                         }
                                     }
                                 }
@@ -344,14 +408,14 @@ fun ViewDetailsSelectedVolunteerScreen(
 
 
                     item {
-                        Text("Week Commencing Date", fontWeight = FontWeight.Bold)
+                        Text("Select Week Commencing Date:", fontWeight = FontWeight.Bold)
                         Button(
                             onClick = { showMondayPicker = true },
                             colors = ButtonDefaults.buttonColors(containerColor = BlueMedium)
                         ) {
                             Text(
-                                if (selectedDate.isEmpty()) "📅 Choose Monday" else "📅 $selectedDate",
-                                color = Color.White
+                                if (selectedDate.isEmpty()) "📅 Calendar:" else "📅 $selectedDate",
+                                color = Color.Black
                             )
                         }
 
@@ -364,79 +428,88 @@ fun ViewDetailsSelectedVolunteerScreen(
                             )
                         }
                     }
-
                     item {
-                        Button(
-                            onClick = {
-                                var hasError = false
-                                daySelections.forEach { day ->
-                                    if (day.isSelectedDay && !day.isSelectedAM && !day.isSelectedPM) {
+                        GradientButtonFullWidth(text = "Place Request for Assistance") {
+                            var hasError = false
+
+                            daySelections.forEach { day ->
+                                when {
+                                    !day.isSelectedDay && (day.isSelectedAM || day.isSelectedPM) -> {
+                                        day.error = "Please select the Day"
+                                        hasError = true
+                                    }
+                                    day.isSelectedDay && !day.isSelectedAM && !day.isSelectedPM -> {
                                         day.error = "Select AM or PM Time"
                                         hasError = true
-                                    } else {
+                                    }
+                                    else -> {
                                         day.error = null
                                     }
                                 }
-                                if (selectedDate.isEmpty()) {
-                                    errorMessage = "Please select a date"
-                                    hasError = true
-                                } else {
-                                    errorMessage = null
-                                }
+                            }
 
-                                if (!hasError) {
-                                    val selectedAvailability = daySelections.filter {
-                                        it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM)
-                                    }.map {
-                                        mapOf(
-                                            "Day" to it.dayLabel,
-                                            "Time" to if (it.isSelectedAM) "AM" else "PM"
-                                        )
-                                    }
+                            if (selectedDate.isEmpty()) {
+                                errorMessage = "Please select a date"
+                                hasError = true
+                            } else {
+                                errorMessage = null
+                            }
 
-                                    val requestData = hashMapOf(
-                                        "VolunteerID" to volunteerID,
-                                        "SelectedTaskID" to selectedTaskID,
-                                        "WeekStartDate" to selectedDate,
-                                        "Day1" to day1,
-                                        "Day2" to day2,
-                                        "SelectedAvailability" to selectedAvailability
+                            // ✅ 🔥 Nova validação: Pelo menos um dia + horário
+                            val hasAtLeastOneTimeSlot = daySelections.any {
+                                it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM)
+                            }
+
+                            if (!hasAtLeastOneTimeSlot) {
+                                errorMessage = "Please select at least one time slot."
+                                hasError = true
+                            }
+
+                            if (!hasError) {
+                                val selectedAvailability = daySelections.filter {
+                                    it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM)
+                                }.map {
+                                    mapOf(
+                                        "Day" to it.dayLabel,
+                                        "Time" to if (it.isSelectedAM) "AM" else "PM"
                                     )
-
-                                    db.collection("VolunteerRequests")
-                                        .add(requestData)
-                                        .addOnSuccessListener {
-                                            Toast.makeText(context, "Request submitted successfully!", Toast.LENGTH_SHORT).show()
-                                            val intent = Intent(context, SendRequestActivity::class.java)
-                                            context.startActivity(intent)
-                                        }
-                                        .addOnFailureListener {
-                                            Toast.makeText(context, "Failed to submit request", Toast.LENGTH_SHORT).show()
-                                        }
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Place Request for Assistance")
+
+                                val requestData = hashMapOf(
+                                    "VolunteerID" to volunteerID,
+                                    "SelectedTaskID" to selectedTaskID,
+                                    "WeekStartDate" to selectedDate,
+                                    "Day1" to day1,
+                                    "Day2" to day2,
+                                    "SelectedAvailability" to selectedAvailability
+                                )
+
+                                db.collection("VolunteerRequests")
+                                    .add(requestData)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(context, "Request submitted successfully!", Toast.LENGTH_SHORT).show()
+                                        val intent = Intent(context, SendRequestActivity::class.java)
+                                        context.startActivity(intent)
+                                    }
+                                    .addOnFailureListener {
+                                        Toast.makeText(context, "Failed to submit request", Toast.LENGTH_SHORT).show()
+                                    }
+                            }
                         }
 
-                        OutlinedButton(
-                            onClick = { (context as? ComponentActivity)?.finish() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp)
+                    GradientButtonFullWidth(
+                            text = "Back to List of Volunteers"
                         ) {
-                            Text("Back to List of Volunteers")
+                            (context as? ComponentActivity)?.finish()
                         }
 
-                        OutlinedButton(
-                            onClick = { (context as? ComponentActivity)?.finish() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp)
+
+                        GradientButtonFullWidth(
+                            text = "Back to Dashboard"
                         ) {
-                            Text("Back to Dashboard")
+                            context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                         }
+
                     }
                 }
             }
