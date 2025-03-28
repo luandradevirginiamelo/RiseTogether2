@@ -72,4 +72,5 @@ dependencies {
     implementation ("com.google.firebase:firebase-firestore-ktx")//  Firestore for storing user info
     implementation ("androidx.compose.material3:material3:1.2.0")
     implementation ("com.google.firebase:firebase-storage:20.2.1")
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
 }

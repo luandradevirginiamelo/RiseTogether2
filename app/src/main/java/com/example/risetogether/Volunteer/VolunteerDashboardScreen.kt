@@ -187,7 +187,7 @@ fun VolunteerDashboardScreenContent() {
                                 .fillMaxWidth()
                                 .padding(2.dp) // ✅ Agora Modifier funciona corretamente
                         ) {
-                            context.startActivity(Intent(context, PatientRequestsScreen::class.java))
+                            context.startActivity(Intent(context, ViewPatientRequestsScreen::class.java))
                         }
 
                         VolunteerButton(
