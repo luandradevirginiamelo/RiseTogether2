@@ -488,7 +488,12 @@ fun ViewDetailsSelectedVolunteerScreen(
                                     .add(requestData)
                                     .addOnSuccessListener {
                                         Toast.makeText(context, "Request submitted successfully!", Toast.LENGTH_SHORT).show()
-                                        val intent = Intent(context, SendRequestActivity::class.java)
+                                        val intent = Intent(context, ReviewConfirmRequestScreen::class.java)
+                                        intent.putExtra("taskId", selectedTaskID)
+                                        intent.putExtra("volunteerId", volunteerID)
+                                        intent.putExtra("weekCommenceDate", selectedDate)
+                                        intent.putExtra("preferredDay", day1) // or whichever day you want
+                                        intent.putExtra("preferredTime", selectedAvailability.firstOrNull()?.get("Time") ?: "AM")
                                         context.startActivity(intent)
                                     }
                                     .addOnFailureListener {

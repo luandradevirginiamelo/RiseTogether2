@@ -3,9 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissões para acessar arquivos e galeria -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+
+
 
     <application
         android:allowBackup="true"
@@ -106,10 +116,11 @@
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
-        <activity android:name=".Patient.SendRequestActivity"
+        <activity android:name=".Patient.ReviewConfirmRequestScreen"
             android:exported="true"
             android:label="Send Request"
             android:theme="@style/Theme.Risetogether" />
+
 
 
         <activity android:name=".Patient.ViewDetailsSelectedVolunteer"
@@ -118,12 +129,13 @@
             android:theme="@style/Theme.Risetogether"/>
 
 
+
         <activity android:name=".Volunteer.VolunteerDashboardScreen"
             android:exported="true"
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
-        <activity android:name=".Volunteer.PatientRequestsScreen"
+        <activity android:name=".Volunteer.ViewPatientRequestsScreen"
             android:exported="true"
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
