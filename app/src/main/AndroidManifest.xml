@@ -116,7 +116,7 @@
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
-        <activity android:name=".Patient.ReviewConfirmRequestScreen"
+        <activity android:name=".Patient.SendRequestSelectedAssistanceTask"
             android:exported="true"
             android:label="Send Request"
             android:theme="@style/Theme.Risetogether" />
