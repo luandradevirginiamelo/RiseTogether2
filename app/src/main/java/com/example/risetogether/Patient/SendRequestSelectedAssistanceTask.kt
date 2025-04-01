@@ -114,9 +114,7 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
                                 .document(taskId).get()
                                 .addOnSuccessListener { taskDoc ->
 
-                                    val volunteerProfileId = taskDoc.getString("volunteerProfileId") ?: ""
-
-                                    db.collection("VolunteeringCancerSurvivor")
+                                   db.collection("VolunteeringCancerSurvivor")
                                         .document(volunteerId).get()
                                         .addOnSuccessListener { volDoc ->
 
@@ -168,7 +166,8 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
                     title = { Text("Request Sent") },
-                    text = { Text("Request for Required Assistance successfully created & sent.") },
+                    text = { Text("\"Request For Required Assistance Suscessfully create and Sent.\n" +
+                            "Select either button Back  to View List of Volunteers or button Back to Dashboard.\"") },
                     confirmButton = {
                         Button(onClick = {
                             showDialog = false
@@ -188,7 +187,7 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
         onSuccess: () -> Unit
     ) {
         val db = FirebaseFirestore.getInstance()
-        val requestId = db.collection("CancerPatientRequestFormRequiredAssistTask").document().id
+        val requestId = patient.id // Em vez de criar novo
 
         val patRequestText = """
             Dear ${taskData.volunteerName} ${taskData.volunteerSurname},
@@ -218,6 +217,10 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
             Mobile Number: ${patient.mobile}
         """.trimIndent()
 
+        val currentTimeMillis = System.currentTimeMillis()
+        val sdf = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+        val currentTimeFormatted = sdf.format(java.util.Date(currentTimeMillis))
+
         val requestData = hashMapOf(
             "PatientRequestFormID" to requestId,
             "CancerPatientID" to patient.id,
@@ -235,7 +238,8 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
             "Day2" to taskData.preferredDay2,
             "Day2AM" to taskData.preferredDay2AM,
             "Day2PM" to taskData.preferredDay2PM,
-            "RequestDate" to System.currentTimeMillis(),
+            "RequestDate" to currentTimeMillis,
+            "RequestTime" to currentTimeFormatted, // 👈 ADD THIS
             "RequestStatus" to "Created",
             "RequestText" to patRequestText
         )
