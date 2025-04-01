@@ -2,6 +2,7 @@ package com.example.risetogether.Patient
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -83,6 +84,7 @@ class DaySelection(val dayLabel: String) {
     var isSelectedAM by mutableStateOf(false)
     var isSelectedPM by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
+
 }
 
 class ViewDetailsSelectedVolunteer : ComponentActivity() {
@@ -125,7 +127,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     var selectedDate by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showMondayPicker by remember { mutableStateOf(false) }
-
+    var volunteerProfileScheduleID by remember { mutableStateOf("") }
     val daySelections = remember {
         mutableStateListOf(
             DaySelection("Monday"),
@@ -169,7 +171,9 @@ fun ViewDetailsSelectedVolunteerScreen(
                             .get()
                             .addOnSuccessListener { scheduleDocs ->
                                 if (!scheduleDocs.isEmpty) {
-                                    val scheduleRaw = scheduleDocs.first().get("Schedule")
+                                    val scheduleDoc = scheduleDocs.first()
+                                    val scheduleRaw = scheduleDoc.get("Schedule")
+                                    volunteerProfileScheduleID = scheduleDoc.getString("VolunteerCalendarProfileScheduleID") ?: ""
                                     val scheduleMap = scheduleRaw as? Map<String, *>
                                     availabilityList.clear()
                                     scheduleMap?.forEach { (_, dayDataAny) ->
@@ -244,20 +248,24 @@ fun ViewDetailsSelectedVolunteerScreen(
                             Column(Modifier.padding(16.dp)) {
                                 ReadOnlyField("Name", volunteerNameDisplayed)
                                 ReadOnlyField("Email", email)
-                                ReadOnlyField("Mobile", mobile)
+                                ReadOnlyField("MobileNo", mobile)
                                 ReadOnlyField("Gender", gender)
                                 ReadOnlyField("Cancer Type", voluncancertype)
-                                ReadOnlyField("Selected Task", selectedTask)
+                                ReadOnlyField("Selected Task for Assistance", selectedTask)
                             }
                         }
                     }
 
                     item {
-                        Text("Availability", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text("Volunteers' Availability by Day of the Week", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
 
                     itemsIndexed(availabilityList.take(5)) { index, item ->
                         val selection = daySelections[index]
+
+                        availabilityList.sortBy {
+                            listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday").indexOf(it.dayLabel)
+                        }
 
                         Column(modifier = Modifier.fillMaxWidth()) {
 
@@ -305,6 +313,12 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                 )
                                                 .clickable {
                                                     selection.isSelectedDay = !selection.isSelectedDay
+
+                                                    // ⚠️ Desmarcar AM/PM se o dia for desmarcado
+                                                    if (!selection.isSelectedDay) {
+                                                        selection.isSelectedAM = false
+                                                        selection.isSelectedPM = false
+                                                    }
                                                 },
                                             contentAlignment = Alignment.Center
                                         ) {
@@ -325,7 +339,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("AM: ${item.amTime}", modifier = Modifier.weight(1f))
+                                            Text("Time AM: ${item.amTime}", modifier = Modifier.weight(1f))
 
                                             Box(
                                                 modifier = Modifier
@@ -340,11 +354,11 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                         shape = RoundedCornerShape(6.dp)
                                                     )
                                                     .clickable(enabled = !selection.isSelectedPM) {
+                                                        selection.isSelectedAM = !selection.isSelectedAM
+
                                                         if (selection.isSelectedAM) {
-                                                            selection.isSelectedAM = false
-                                                        } else {
-                                                            selection.isSelectedAM = true
                                                             selection.isSelectedPM = false
+                                                            selection.isSelectedDay = true // ✅ Força marcar o dia também
                                                         }
                                                     },
                                                 contentAlignment = Alignment.Center
@@ -367,7 +381,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text("PM: ${item.pmTime}", modifier = Modifier.weight(1f))
+                                            Text("Time PM: ${item.pmTime}", modifier = Modifier.weight(1f))
 
                                             Box(
                                                 modifier = Modifier
@@ -382,11 +396,11 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                         shape = RoundedCornerShape(6.dp)
                                                     )
                                                     .clickable(enabled = !selection.isSelectedAM) {
+                                                        selection.isSelectedPM = !selection.isSelectedPM
+
                                                         if (selection.isSelectedPM) {
-                                                            selection.isSelectedPM = false
-                                                        } else {
-                                                            selection.isSelectedPM = true
                                                             selection.isSelectedAM = false
+                                                            selection.isSelectedDay = true // ✅ Força marcar o dia também
                                                         }
                                                     },
                                                 contentAlignment = Alignment.Center
@@ -398,12 +412,13 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                     modifier = Modifier.padding(horizontal = 12.dp)
                                                 )
                                             }
-
                                         }
                                     }
                                 }
                             }
+
                         }
+
                     }
 
 
@@ -430,6 +445,13 @@ fun ViewDetailsSelectedVolunteerScreen(
                     }
                     item {
                         GradientButtonFullWidth(text = "Place Request for Assistance") {
+                            data class SelectedDayData(
+                                val dayLabel: String,
+                                val isAM: Boolean,
+                                val isPM: Boolean,
+                                val time: String
+                            )
+
                             var hasError = false
 
                             daySelections.forEach { day ->
@@ -442,9 +464,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                         day.error = "Select AM or PM Time"
                                         hasError = true
                                     }
-                                    else -> {
-                                        day.error = null
-                                    }
+                                    else -> day.error = null
                                 }
                             }
 
@@ -455,54 +475,60 @@ fun ViewDetailsSelectedVolunteerScreen(
                                 errorMessage = null
                             }
 
-                            // ✅ 🔥 Nova validação: Pelo menos um dia + horário
-                            val hasAtLeastOneTimeSlot = daySelections.any {
-                                it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM)
-                            }
+                            // 🔥 Mapeia seleção + disponibilidade corretamente
+                            val selectedDayDataList = availabilityList.zip(daySelections)
+                                .filter { it.second.isSelectedDay && (it.second.isSelectedAM || it.second.isSelectedPM) }
+                                .map { (availability, selection) ->
+                                    val selectedTime = when {
+                                        selection.isSelectedAM -> availability.amTime
+                                        selection.isSelectedPM -> availability.pmTime
+                                        else -> ""
+                                    }
 
-                            if (!hasAtLeastOneTimeSlot) {
-                                errorMessage = "Please select at least one time slot."
-                                hasError = true
-                            }
-
-                            if (!hasError) {
-                                val selectedAvailability = daySelections.filter {
-                                    it.isSelectedDay && (it.isSelectedAM || it.isSelectedPM)
-                                }.map {
-                                    mapOf(
-                                        "Day" to it.dayLabel,
-                                        "Time" to if (it.isSelectedAM) "AM" else "PM"
+                                    SelectedDayData(
+                                        dayLabel = availability.dayLabel,
+                                        isAM = selection.isSelectedAM,
+                                        isPM = selection.isSelectedPM,
+                                        time = selectedTime
                                     )
                                 }
 
-                                val requestData = hashMapOf(
-                                    "VolunteerID" to volunteerID,
-                                    "SelectedTaskID" to selectedTaskID,
-                                    "WeekStartDate" to selectedDate,
-                                    "Day1" to day1,
-                                    "Day2" to day2,
-                                    "SelectedAvailability" to selectedAvailability
-                                )
+                            val day1Data = selectedDayDataList.getOrNull(0)
+                            val day2Data = selectedDayDataList.getOrNull(1)
 
-                                db.collection("VolunteerRequests")
-                                    .add(requestData)
-                                    .addOnSuccessListener {
-                                        Toast.makeText(context, "Request submitted successfully!", Toast.LENGTH_SHORT).show()
-                                        val intent = Intent(context, ReviewConfirmRequestScreen::class.java)
-                                        intent.putExtra("taskId", selectedTaskID)
-                                        intent.putExtra("volunteerId", volunteerID)
-                                        intent.putExtra("weekCommenceDate", selectedDate)
-                                        intent.putExtra("preferredDay", day1) // or whichever day you want
-                                        intent.putExtra("preferredTime", selectedAvailability.firstOrNull()?.get("Time") ?: "AM")
-                                        context.startActivity(intent)
-                                    }
-                                    .addOnFailureListener {
-                                        Toast.makeText(context, "Failed to submit request", Toast.LENGTH_SHORT).show()
-                                    }
+                            // ✅ Logs pra garantir
+                            Log.d("SELECTED_INTENT", "DAY1 = ${day1Data?.dayLabel} | TIME=${day1Data?.time} | AM=${day1Data?.isAM} | PM=${day1Data?.isPM}")
+                            Log.d("SELECTED_INTENT", "DAY2 = ${day2Data?.dayLabel} | TIME=${day2Data?.time} | AM=${day2Data?.isAM} | PM=${day2Data?.isPM}")
+
+                            if (!hasError) {
+                                val intent = Intent(context, SendRequestSelectedAssistanceTask::class.java)
+                                intent.putExtra("taskId", selectedTaskID)
+                                intent.putExtra("volunteerId", volunteerID)
+                                intent.putExtra("weekCommenceDate", selectedDate)
+                                intent.putExtra("volunteerName", volunteerNameDisplayed.split(" ").firstOrNull() ?: "")
+                                intent.putExtra("volunteerSurname", volunteerNameDisplayed.split(" ").getOrNull(1) ?: "")
+                                intent.putExtra("assistTaskName", selectedTask)
+                                intent.putExtra("volunteerProfileID", volunteerProfileID)
+                                intent.putExtra("volunteerProfileScheduleID", volunteerProfileScheduleID)
+                                intent.putExtra("selectedTaskCatID", selectedTaskCatID)
+
+                                // ✅ Dias e horários reais
+                                intent.putExtra("day1", day1Data?.dayLabel ?: "")
+                                intent.putExtra("day2", day2Data?.dayLabel ?: "")
+                                intent.putExtra("day1AM", day1Data?.isAM ?: false)
+                                intent.putExtra("day1PM", day1Data?.isPM ?: false)
+                                intent.putExtra("day2AM", day2Data?.isAM ?: false)
+                                intent.putExtra("day2PM", day2Data?.isPM ?: false)
+                                intent.putExtra("day1Time", day1Data?.time ?: "")
+                                intent.putExtra("day2Time", day2Data?.time ?: "")
+
+                                context.startActivity(intent)
                             }
                         }
 
-                    GradientButtonFullWidth(
+
+
+                        GradientButtonFullWidth(
                             text = "Back to List of Volunteers"
                         ) {
                             (context as? ComponentActivity)?.finish()
