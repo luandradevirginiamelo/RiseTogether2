@@ -195,7 +195,7 @@ fun PatientDashboardScreenContent() {
                                 .fillMaxWidth()
                                 .padding(2.dp) // ✅ Agora Modifier funciona corretamente
                         ) {
-                            context.startActivity(Intent(context, NotificationsScreen::class.java))
+                            context.startActivity(Intent(context, ViewNotificationsRemindersScreen::class.java))
                         }
 
                         PatientButton(
@@ -204,7 +204,7 @@ fun PatientDashboardScreenContent() {
                                 .fillMaxWidth()
                                 .padding(2.dp) // ✅ Agora Modifier funciona corretamente
                         ) {
-                            context.startActivity(Intent(context, FeedbackScreen::class.java))
+                            context.startActivity(Intent(context, ProvideFeedbackRatingsScreen::class.java))
                         }
                     }
                 }
