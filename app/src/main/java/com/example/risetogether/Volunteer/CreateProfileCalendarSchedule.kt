@@ -3,7 +3,6 @@ package com.example.risetogether.Volunteer
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -22,6 +21,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.text.style.TextAlign // ✅ IMPORTED TO FIX ERROR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
 
 class CreateProfileCalendarScheduleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +33,7 @@ class CreateProfileCalendarScheduleActivity : ComponentActivity() {
     }
 }
 
+val Green = Color(0xFF81C784)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,20 +88,47 @@ fun CreateProfileCalendarSchedule() {
         }
     }
 
-
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(12.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        tonalElevation = 4.dp
     ) {
-        Text("Schedule Assistance Task", fontSize = 22.sp, color = Color.Black)
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // HEADER
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(listOf(Color(0xFFB3E5FC), Green)),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "Schedule Assistance Task",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
-        Text("Assistance Task Name: $selectedTaskName", fontSize = 18.sp, color = Color.Black)
-        Text("Assistance Task Category: $selectedTaskCategory", fontSize = 16.sp, color = Color.Black)
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Assistance Task Name: $selectedTaskName", fontSize = 16.sp)
+                    Text("Category: $selectedTaskCategory", fontSize = 16.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
         // 🔥 Generate fields dynamically based on selected days
         repeat(selectedDays) { dayIndex ->
@@ -108,136 +137,138 @@ fun CreateProfileCalendarSchedule() {
             var selectedAMTime by remember { mutableStateOf("") }
             var selectedPMTime by remember { mutableStateOf("") }
 
-            Text("Day $dayNumber of the Week Availability:", fontSize = 16.sp, color = Color.Black)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Day $dayNumber of the Week Availability:", fontWeight = FontWeight.Bold)
 
-            DropdownField(
-                label = "Select Day",
-                options = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
-                selectedOption = selectedDay
-            ) { selected ->
-                selectedDay = selected
-                schedule["Day$dayNumber"] = Triple(selected, schedule["Day$dayNumber"]?.second ?: "", schedule["Day$dayNumber"]?.third ?: "")
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    DropdownField(
+                        label = "Select Day",
+                        options = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+                        selectedOption = selectedDay
+                    ) { selected ->
+                        selectedDay = selected
+                        schedule["Day$dayNumber"] = Triple(selected, schedule["Day$dayNumber"]?.second, schedule["Day$dayNumber"]?.third)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    DropdownField(
+                        label = "AM Time",
+                        options = listOf("08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00"),
+                        selectedOption = selectedAMTime
+                    ) { selected ->
+                        selectedAMTime = selected
+                        schedule["Day$dayNumber"] = Triple(schedule["Day$dayNumber"]?.first, selected, schedule["Day$dayNumber"]?.third)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    DropdownField(
+                        label = "PM Time",
+                        options = listOf("14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00"),
+                        selectedOption = selectedPMTime
+                    ) { selected ->
+                        selectedPMTime = selected
+                        schedule["Day$dayNumber"] = Triple(schedule["Day$dayNumber"]?.first, schedule["Day$dayNumber"]?.second, selected)
+                    }
+                }
             }
 
-            DropdownField(
-                label = "AM Time",
-                options = listOf("08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00"),
-                selectedOption = selectedAMTime
-            ) { selected ->
-                selectedAMTime = selected
-                schedule["Day$dayNumber"] = Triple(schedule["Day$dayNumber"]?.first ?: "", selected, schedule["Day$dayNumber"]?.third ?: "")
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+            errorMessage?.let {
+                Text(it, color = Color.Red, fontSize = 14.sp)
             }
 
-            DropdownField(
-                label = "PM Time",
-                options = listOf("14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00", "17:00 - 18:00"),
-                selectedOption = selectedPMTime
-            ) { selected ->
-                selectedPMTime = selected
-                schedule["Day$dayNumber"] = Triple(schedule["Day$dayNumber"]?.first ?: "", schedule["Day$dayNumber"]?.second ?: "", selected)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = {
+                    if (schedule.isEmpty()) {
+                        errorMessage = "Please select at least one time slot!"
+                        return@Button
+                    }
+
+                    val hasAtLeastOneTimeSelected = schedule.values.any {
+                        !it.second.isNullOrBlank() || !it.third.isNullOrBlank()
+                    }
+                    if (!hasAtLeastOneTimeSelected) {
+                        errorMessage = "Please select at least one AM or PM time!"
+                        return@Button
+                    }
+
+                    val scheduleData = hashMapOf<String, Any?>(
+                        "VolunteerCalendarProfileScheduleID" to "",
+                        "VolunteerProfileID" to volunteerProfileID,
+                        "VolunteerID" to currentVolunteerID,
+                        "AssistTaskCatID" to assistTaskCatID,
+                        "AssistTaskID" to assistTaskID,
+                        "DaysSelected" to selectedDays,
+                    )
+
+                    schedule.forEach { (dayKey, triple) ->
+                        val dayNumber = dayKey.filter { it.isDigit() }
+                        scheduleData["Day$dayNumber Availability"] = triple.first?.takeIf { it.isNotBlank() } ?: null
+                        scheduleData["Day $dayNumber AM"] = triple.second?.takeIf { it.isNotBlank() } ?: null
+                        scheduleData["Day $dayNumber PM"] = triple.third?.takeIf { it.isNotBlank() } ?: null
+                    }
+
+                    db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
+                        .add(scheduleData)
+                        .addOnSuccessListener { documentReference ->
+                            val generatedID = documentReference.id
+                            db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
+                                .document(generatedID)
+                                .update("VolunteerCalendarProfileScheduleID", generatedID)
+                                .addOnSuccessListener {
+                                    isSaving = false
+                                    isSaved = true
+                                }
+                                .addOnFailureListener {
+                                    isSaving = false
+                                    errorMessage = "Error updating Schedule ID."
+                                }
+                        }
+                        .addOnFailureListener {
+                            isSaving = false
+                            errorMessage = "Error saving schedule."
+                        }
+
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSaving
+            ) {
+                Text(if (isSaving) "Saving..." else "Save Schedule")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        errorMessage?.let {
-            Text(it, color = Color.Red, fontSize = 16.sp)
-        }
-
-        // 🔥 Save button
-        Button(
-            onClick = {
-                if (schedule.isEmpty()) {
-                    errorMessage = "Please select at least one time slot!"
-                    return@Button
-                }
-
-                // ✅ Check if at least one of the time is selected!
-                val hasAtLeastOneTimeSelected = schedule.values.any {
-                    !it.second.isNullOrBlank() || !it.third.isNullOrBlank()
-                }
-                if (!hasAtLeastOneTimeSelected) {
-                    errorMessage = "Please select at least one AM or PM time for the week!"
-                    return@Button
-                }
-
-                val scheduleData = hashMapOf<String, Any?>(
-                    "VolunteerCalendarProfileScheduleID" to "", // 🔥 This will be updated after Firestore generates the ID
-                    "VolunteerProfileID" to volunteerProfileID,
-                    "VolunteerID" to currentVolunteerID, // ✅🔥 AQUI ESTÁ A CHAVE!
-                    "AssistTaskCatID" to assistTaskCatID, // ✅ Matching TaskCatID
-                    "AssistTaskID" to assistTaskID, // ✅ Matching TaskID
-                    "DaysSelected" to selectedDays,
-                )
-                // Agora adicionamos os dias e horários separadamente:
-                schedule.forEach { (dayKey, triple) ->
-                    val dayNumber = dayKey.filter { it.isDigit() } // extrai "1", "2", etc.
-
-                    // Força sempre gravar DayX mesmo que nulo
-                    scheduleData["Day$dayNumber Availability"] = triple.first?.takeIf { it.isNotBlank() } ?: null
-                    scheduleData["Day $dayNumber AM"] = triple.second?.takeIf { it.isNotBlank() } ?: null
-                    scheduleData["Day $dayNumber PM"] = triple.third?.takeIf { it.isNotBlank() } ?: null
-                }
-
-
-                // 🔥 Add to Firestore and Capture Auto-Generated ID
-                db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
-                    .add(scheduleData)
-                    .addOnSuccessListener { documentReference ->
-                        val generatedID = documentReference.id
-
-                        // 🔥 Update the document with its own Firestore-generated ID
-                        db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
-                            .document(generatedID)
-                            .update("VolunteerCalendarProfileScheduleID", generatedID)
-                            .addOnSuccessListener {
-                                isSaving = false
-                                isSaved = true // ✅ Now success message & buttons appear!
-                            }
-                            .addOnFailureListener {
-                                isSaving = false
-                                errorMessage = "Error updating Schedule ID."
-                            }
-                    }
-                    .addOnFailureListener {
-                        isSaving = false
-                        errorMessage = "Error saving schedule."
-                    }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isSaving
-        ) {
-            Text(if (isSaving) "Saving..." else "Save Schedule")
-        }
-    }
-
-    if (isSaved) { // ✅ Show success message & buttons after saving
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .background(Color(0xFFE8F5E9), shape = RoundedCornerShape(12.dp)) // ✅ FIXED ERROR (background)
-                .padding(16.dp), // ✅ Inner padding
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (isSaved) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .background(Color(0xFFE8F5E9), shape = RoundedCornerShape(12.dp))
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    "🎉 Record of Assistance Task & Category personal Calendar schedule successfully created! 🎉\n\n" +
-                            "You may press 'Another Assistance Task' button or 'Back to Dashboard'.",
+                    "🎉 Schedule successfully saved!\n\nYou may create another task or go back to dashboard.",
+                    color = Color(0xFF2E7D32),
                     fontSize = 16.sp,
-                    color = Color(0xFF2E7D32), // ✅ Dark Green Text
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    textAlign = TextAlign.Center // ✅ FIXED ERROR (TextAlign)
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                Button(
-                    onClick = { (context as? ComponentActivity)?.finish() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Button(onClick = { (context as? ComponentActivity)?.finish() }, modifier = Modifier.fillMaxWidth()) {
                     Text("Close")
                 }
 
@@ -262,7 +293,6 @@ fun CreateProfileCalendarSchedule() {
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

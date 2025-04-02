@@ -5,11 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
 
-class FeedbackScreen : ComponentActivity() {
+class ProvideFeedbackRatingsScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Text("Patient Profile Screen")
+            Text("PROVIDE FEEDBACK SCREEN")
         }
     }
 }
