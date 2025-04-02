@@ -163,21 +163,24 @@ fun CreateProfileCalendarSchedule() {
                     return@Button
                 }
 
-                val scheduleData = hashMapOf(
+                val scheduleData = hashMapOf<String, Any?>(
                     "VolunteerCalendarProfileScheduleID" to "", // 🔥 This will be updated after Firestore generates the ID
                     "VolunteerProfileID" to volunteerProfileID,
                     "VolunteerID" to currentVolunteerID, // ✅🔥 AQUI ESTÁ A CHAVE!
                     "AssistTaskCatID" to assistTaskCatID, // ✅ Matching TaskCatID
                     "AssistTaskID" to assistTaskID, // ✅ Matching TaskID
                     "DaysSelected" to selectedDays,
-                    "Schedule" to schedule.mapValues {
-                        hashMapOf(
-                            "Day" to it.value.first,
-                            "AMTime" to (it.value.second ?: "null"),
-                            "PMTime" to (it.value.third ?: "null")
-                        )
-                    }
                 )
+                // Agora adicionamos os dias e horários separadamente:
+                schedule.forEach { (dayKey, triple) ->
+                    val dayNumber = dayKey.filter { it.isDigit() } // extrai "1", "2", etc.
+
+                    // Força sempre gravar DayX mesmo que nulo
+                    scheduleData["Day$dayNumber Availability"] = triple.first?.takeIf { it.isNotBlank() } ?: null
+                    scheduleData["Day $dayNumber AM"] = triple.second?.takeIf { it.isNotBlank() } ?: null
+                    scheduleData["Day $dayNumber PM"] = triple.third?.takeIf { it.isNotBlank() } ?: null
+                }
+
 
                 // 🔥 Add to Firestore and Capture Auto-Generated ID
                 db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")

@@ -128,6 +128,8 @@ fun ViewDetailsSelectedVolunteerScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showMondayPicker by remember { mutableStateOf(false) }
     var volunteerProfileScheduleID by remember { mutableStateOf("") }
+
+
     val daySelections = remember {
         mutableStateListOf(
             DaySelection("Monday"),
@@ -172,19 +174,25 @@ fun ViewDetailsSelectedVolunteerScreen(
                             .addOnSuccessListener { scheduleDocs ->
                                 if (!scheduleDocs.isEmpty) {
                                     val scheduleDoc = scheduleDocs.first()
-                                    val scheduleRaw = scheduleDoc.get("Schedule")
+
                                     volunteerProfileScheduleID = scheduleDoc.getString("VolunteerCalendarProfileScheduleID") ?: ""
-                                    val scheduleMap = scheduleRaw as? Map<String, *>
-                                    availabilityList.clear()
-                                    scheduleMap?.forEach { (_, dayDataAny) ->
-                                        val dayData = dayDataAny as? Map<String, *>
-                                        val dayLabel = dayData?.get("Day") as? String ?: ""
-                                        val am = dayData?.get("AMTime") as? String ?: ""
-                                        val pm = dayData?.get("PMTime") as? String ?: ""
-                                        if (dayLabel.isNotEmpty()) {
-                                            availabilityList.add(VolunteerDayAvailability(dayLabel, am, pm))
+
+                                 availabilityList.clear()
+
+                                    for (i in 1..2) {
+                                        val dayKey = "Day${i} Availability"
+                                        val amKey = "Day $i AM"
+                                        val pmKey = "Day $i PM"
+
+                                        val day = scheduleDoc.getString(dayKey) ?: continue
+                                        val amTime = scheduleDoc.getString(amKey) ?: ""
+                                        val pmTime = scheduleDoc.getString(pmKey) ?: ""
+
+                                        if (day.isNotEmpty()) {
+                                            availabilityList.add(VolunteerDayAvailability(day, amTime, pmTime))
                                         }
                                     }
+
                                 }
                             }
                     } else {
@@ -295,7 +303,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
-                                            text = item.dayLabel,
+                                            text = "Day ${index + 1} of Week: ${item.dayLabel}",
                                             fontWeight = FontWeight.SemiBold,
                                             modifier = Modifier.weight(1f)
                                         )
@@ -499,6 +507,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                             // ✅ Logs pra garantir
                             Log.d("SELECTED_INTENT", "DAY1 = ${day1Data?.dayLabel} | TIME=${day1Data?.time} | AM=${day1Data?.isAM} | PM=${day1Data?.isPM}")
                             Log.d("SELECTED_INTENT", "DAY2 = ${day2Data?.dayLabel} | TIME=${day2Data?.time} | AM=${day2Data?.isAM} | PM=${day2Data?.isPM}")
+                            Log.d("DEBUG_INTENT", "ScheduleID: $volunteerProfileScheduleID")
 
                             if (!hasError) {
                                 val intent = Intent(context, SendRequestSelectedAssistanceTask::class.java)
@@ -513,8 +522,8 @@ fun ViewDetailsSelectedVolunteerScreen(
                                 intent.putExtra("selectedTaskCatID", selectedTaskCatID)
 
                                 // ✅ Dias e horários reais
-                                intent.putExtra("day1", day1Data?.dayLabel ?: "")
-                                intent.putExtra("day2", day2Data?.dayLabel ?: "")
+                                intent.putExtra("day1", "Day 1 of Week: ${day1Data?.dayLabel ?: ""}")
+                                intent.putExtra("day2", "Day 2 of Week: ${day2Data?.dayLabel ?: ""}")
                                 intent.putExtra("day1AM", day1Data?.isAM ?: false)
                                 intent.putExtra("day1PM", day1Data?.isPM ?: false)
                                 intent.putExtra("day2AM", day2Data?.isAM ?: false)

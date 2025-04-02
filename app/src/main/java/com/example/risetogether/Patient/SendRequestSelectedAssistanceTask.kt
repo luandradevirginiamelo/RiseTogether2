@@ -21,6 +21,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import java.util.Date    // ✅ CERTO!
+import java.util.Locale // ✅ CERTO
+import java.text.SimpleDateFormat
+
 
 // --- Data Classes ---
 data class Patient(
@@ -63,7 +67,7 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
         val weekCommenceDate = intent.getStringExtra("weekCommenceDate") ?: ""
         val preferredDay1 = intent.getStringExtra("day1")
         val preferredDay2 = intent.getStringExtra("day2")
-        val preferredTime = intent.getStringExtra("preferredTime") ?: ""
+
 
 
         // ✅ Aqui está o que você pediu (ajustado)
@@ -187,10 +191,16 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
         onSuccess: () -> Unit
     ) {
         val db = FirebaseFirestore.getInstance()
-        val requestId = patient.id // Em vez de criar novo
+        val requestId = FirebaseFirestore.getInstance()
+            .collection("CancerPatientRequestFormRequiredAssistTask")
+            .document().id
+
+        // ✅ FORMATANDO DATA E HORA AQUI, NO LUGAR CERTO
+        val currentDateFormatted = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+        val currentTimeFormatted = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
 
         val patRequestText = """
-            Dear ${taskData.volunteerName} ${taskData.volunteerSurname},
+            Dear, ${taskData.volunteerName} ${taskData.volunteerSurname}.
             
             I’m sending you here my request for assistance with the task "${taskData.taskName}" 
             for the week that commences on ${taskData.weekCommenceDate}.
@@ -217,9 +227,6 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
             Mobile Number: ${patient.mobile}
         """.trimIndent()
 
-        val currentTimeMillis = System.currentTimeMillis()
-        val sdf = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-        val currentTimeFormatted = sdf.format(java.util.Date(currentTimeMillis))
 
         val requestData = hashMapOf(
             "PatientRequestFormID" to requestId,
@@ -230,16 +237,20 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
             "AssistTaskName" to taskData.taskName,
             "VolunteerID" to taskData.volunteerId,
             "VolunteerProfileID" to taskData.volunteerProfileId,
-            "VolunteerCalendarProfileScheduleID" to taskData.volunteerProfileScheduleId,
+            "VolunteerCalendarProfileScheduleID" to taskData.volunteerProfileScheduleId, // 👈 este aqui!
             "WeekCommenceDate" to taskData.weekCommenceDate,
-            "Day1" to taskData.preferredDay1,
-            "Day1AM" to taskData.preferredDay1AM,
-            "Day1PM" to taskData.preferredDay1PM,
-            "Day2" to taskData.preferredDay2,
-            "Day2AM" to taskData.preferredDay2AM,
-            "Day2PM" to taskData.preferredDay2PM,
-            "RequestDate" to currentTimeMillis,
-            "RequestTime" to currentTimeFormatted, // 👈 ADD THIS
+            "Day1 Availability" to taskData.preferredDay1
+                ?.removePrefix("Day 1 of Week: ")
+                ?.takeIf { it.isNotBlank() },
+            "Day 1 AM" to if (taskData.preferredDay1AM) taskData.day1Time else null,
+            "Day 1 PM" to if (taskData.preferredDay1PM) taskData.day1Time else null,
+            "Day2 Availability" to taskData.preferredDay2
+                ?.removePrefix("Day 2 of Week: ")
+                ?.takeIf { it.isNotBlank() },
+            "Day 2 AM" to if (taskData.preferredDay2AM) taskData.day2Time else null,
+            "Day 2 PM" to if (taskData.preferredDay2PM) taskData.day2Time else null,
+            "RequestDate" to currentDateFormatted,
+            "RequestTime" to currentTimeFormatted,
             "RequestStatus" to "Created",
             "RequestText" to patRequestText
         )
@@ -309,17 +320,17 @@ fun SendRequestUI(
             val preferredDay1 = taskData.preferredDay1 ?: ""
             val preferredDay2 = taskData.preferredDay2 ?: ""
 
-            val fullDay1 = if (preferredDay1.isNotEmpty()) {
+            val fullDay1 = if (preferredDay1.isNotBlank() && preferredDay1 != "Day 1 of Week: ") {
                 "$preferredDay1 at ${taskData.day1Time}"
             } else ""
 
-            val fullDay2 = if (preferredDay2.isNotEmpty()) {
+            val fullDay2 = if (preferredDay2.isNotBlank() && preferredDay2 != "Day 2 of Week: ") {
                 "$preferredDay2 at ${taskData.day2Time}"
             } else ""
 
 
             val message = """
-    Dear ${taskData.volunteerName} ${taskData.volunteerSurname},
+    Dear, ${taskData.volunteerName} ${taskData.volunteerSurname}.
     
     I am sending you here my request for Assistance in the Task "${taskData.taskName}" 
     for the week that commences on ${taskData.weekCommenceDate}.
