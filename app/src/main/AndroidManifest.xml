@@ -28,6 +28,15 @@
         android:theme="@style/Theme.Risetogether"
         tools:targetApi="31">
 
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false"
+            tools:ignore="WrongManifestParent">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
         <!-- Splash Screen: First screen to open -->
         <activity
             android:name=".SplashActivity"
