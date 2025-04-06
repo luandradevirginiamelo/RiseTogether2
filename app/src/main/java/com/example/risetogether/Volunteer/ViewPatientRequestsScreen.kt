@@ -314,7 +314,9 @@ fun ViewPatientRequestPopup(
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    requestData = doc.data
+                    val fullData = doc.data?.toMutableMap() ?: mutableMapOf()
+                    fullData["PatRequestFormID"] = doc.id  // 👈 Esse é o ID do documento no Firestore
+                    requestData = fullData
                     val patientId = doc.getString("CancerPatientID") ?: ""
                     val volunteerId = doc.getString("VolunteerID") ?: ""
 
@@ -368,7 +370,7 @@ fun ViewPatientRequestPopup(
                 }
 
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text("Dear $volunteerName,", fontSize = 16.sp)
+                    Text("Dear, $volunteerName.", fontSize = 16.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("I am sending you here my request for assistance with the task \"$taskName\" for the week that commences on $week.", fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -396,16 +398,20 @@ fun ViewPatientRequestPopup(
         }
     )
 
-    // ✅ Show confirmation for Accepted
     if (showAcceptPopup && requestData != null) {
         NotificationAcceptScreen(
             requestData = requestData!!,
             onClose = {
-                showAcceptPopup = false
-                onDismiss()
+                showAcceptPopup = false // Fecha apenas o pop-up de confirmação (2.2B2a)
+                onDismiss()             // Fecha a tela anterior (2.2B1)
+            },
+            onNotificationSent = {
+                showAcceptPopup = false // Fecha 2.2B2a
+                onDismiss()             // Fecha 2.2B1 e volta para 2.2B
             }
         )
     }
+
 
     // ✅ Show confirmation for Rejected
     if (showRejectPopup && requestData != null) {
