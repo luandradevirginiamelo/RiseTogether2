@@ -64,7 +64,7 @@
 
         <!-- Doctors Login Screen -->
         <activity
-            android:name=".DoctorLoginScreen"
+            android:name=".Doctor.DoctorLoginScreen"
             android:exported="true"
             android:label="Doctor Login"
             android:theme="@style/Theme.Risetogether"/>
@@ -78,7 +78,13 @@
 
         <!-- Register Screen -->
         <activity
-            android:name=".RegisterScreen"
+            android:name=".Doctor.RegisterPatientTreatment"
+            android:exported="true"
+            android:label="Register"
+            android:theme="@style/Theme.Risetogether"/>
+
+        <activity
+            android:name=".Doctor.RegisterVolunteeringCancerSurvivor"
             android:exported="true"
             android:label="Register"
             android:theme="@style/Theme.Risetogether"/>
@@ -103,7 +109,7 @@
             android:theme="@style/Theme.Risetogether"/>
 
         <activity
-            android:name=".DoctorDashboardScreen"
+            android:name=".Doctor.DoctorDashboardScreen"
             android:exported="true"
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
