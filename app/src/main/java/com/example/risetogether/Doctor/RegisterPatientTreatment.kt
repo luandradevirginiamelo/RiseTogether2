@@ -109,9 +109,9 @@ fun RegisterPatientTreatmentContent(onLogout: () -> Unit = {}) {
 
                 Box(
                     modifier = Modifier
-                        .background(Color.White, shape = RoundedCornerShape(12.dp))
-                        .padding(10.dp)
-                        .border(2.dp, Color(0xFFB39DDB), RoundedCornerShape(12.dp)) // opcional: contorno
+                        .background(Color.White, shape = RoundedCornerShape(10.dp))
+                        .padding(8.dp)
+                        .border(2.dp, Color(0xFFB39DDB), RoundedCornerShape(10.dp)) // opcional: contorno
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
@@ -186,7 +186,7 @@ fun RegisterPatientFormContent(
                 name = it
                 nameError = false
             },
-            label = { Text("Patient Name") },
+            label = { Text("Cancer Patient Name:") },
             isError = nameError
         )
         if (nameError) {
@@ -201,7 +201,7 @@ fun RegisterPatientFormContent(
                 surname = it
                 surnameError = false
             },
-            label = { Text("Patient Surname") },
+            label = { Text("Cancer Patient Surname:") },
             isError = surnameError
         )
         if (surnameError) {
@@ -257,7 +257,7 @@ fun RegisterPatientFormContent(
         OutlinedTextField(
             value = mobile,
             onValueChange = { if (it.length <= 10) mobile = it },
-            label = { Text("Mobile Number") },
+            label = { Text("Patient MobileNo:") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             isError = mobileHasError,
             singleLine = true,
@@ -292,7 +292,7 @@ fun RegisterPatientFormContent(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email Address") },
+            label = { Text("Patient Username (email address)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isError = emailHasError,
             singleLine = true,
@@ -307,7 +307,7 @@ fun RegisterPatientFormContent(
                 password = it
                 passwordError = false
             },
-            label = { Text("Initial Password") },
+            label = { Text("Patient Initial Password:") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             isError = passwordError
         )
@@ -357,12 +357,20 @@ fun RegisterPatientFormContent(
             }
         }
 
-        if (registerSuccess) {
-            Text(
-                "Cancer Patient Record Successfully created.\nPress the Send button to send a reset password link.",
-                color = Color.Black,
-                modifier = Modifier.padding(vertical = 10.dp)
-            )
+        if (registerSuccess && sendButtonEnabled) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFD0F0C0), shape = RoundedCornerShape(8.dp)) // Verde claro
+                    .padding(12.dp)
+            ) {
+                Text(
+                    "Cancer Patient Record Successfully created.\nPress the Send button to send a reset password link.",
+                    color = Color(0xFF2E7D32), // Verde escuro
+                    fontSize = 14.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         if (showSendButton && sendButtonEnabled) {
