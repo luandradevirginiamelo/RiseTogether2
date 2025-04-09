@@ -252,7 +252,7 @@ fun VolunteerProfileScreenContent() {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            "Please, select an option from each of the following pull-down menus, that best describes the type of assistance you may require:",
+                            "Please, select an option from each of the following pull-down menus, that best describes the type of assistance you may Provide:",
                             fontSize = 16.sp,
                             color = Color.Black
                         )

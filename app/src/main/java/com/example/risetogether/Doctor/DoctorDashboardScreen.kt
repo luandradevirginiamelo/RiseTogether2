@@ -1,4 +1,4 @@
-package com.example.risetogether
+package com.example.risetogether.Doctor
 
 import android.content.Intent
 import android.os.Bundle
@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.risetogether.R
 import com.example.risetogether.ui.theme.DoctorBackground
 import com.example.risetogether.ui.theme.DoctorButton
 
@@ -31,9 +32,13 @@ class DoctorDashboardScreen : ComponentActivity() {
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoctorDashboardScreenContent() {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
 
     Column(
         modifier = Modifier
@@ -56,36 +61,29 @@ fun DoctorDashboardScreenContent() {
 
         // 🔥 Screen Title
         Text(
-            text = "Doctor Dashboard",
-            fontSize = 24.sp,
+            text = "Doctor`s Home (Dashboard) Screen",
+            fontSize = 26.sp,
             color = Color.Black
         )
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // 🔥 Register Cancer Patients Button
-        DoctorButton(
-            text = "Home"
-        ) {
-            context.startActivity(Intent(context, RegisterPatientScreen::class.java))
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
 
         // 🔥 Register Vetted Cancer Survivors Button
         DoctorButton(
-            text = "Register Volunteers"
+            text = "Register Patient in Treatment"
         ) {
-            context.startActivity(Intent(context, RegisterSurvivorScreen::class.java))
+            context.startActivity(Intent(context, RegisterPatientTreatment::class.java))
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // 🔥 Home Doctor Screen Button
         DoctorButton(
-            text = "Register Cancer Patients"
+            text = "Register Volunteering Cancer Survivor"
         ) {
-            context.startActivity(Intent(context, HomeDoctorScreen::class.java))
+            context.startActivity(Intent(context, RegisterVolunteeringCancerSurvivor::class.java))
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.risetogether
+package com.example.risetogether.Doctor
 
 import android.content.Intent
 import android.os.Bundle
@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -32,6 +31,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.risetogether.R
+import com.example.risetogether.ResetPasswordDoctorScreen
 import com.example.risetogether.ui.theme.DoctorBackground
 import com.example.risetogether.ui.theme.DoctorButton
 import com.google.firebase.auth.FirebaseAuth
