@@ -23,8 +23,8 @@ fun ElevatedGradientButton(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth(0.87f)
-            .height(54.dp)
+            .fillMaxWidth(0.89f)
+            .height(57.dp)
             .background(brush = gradient, shape = RoundedCornerShape(14.dp))
     ) {
         ElevatedButton(

@@ -122,6 +122,14 @@ fun RegisterPatientTreatmentContent(onLogout: () -> Unit = {}) {
                     )
                 }
 
+                // 👇 AQUI ENTRA O TÍTULO ENTRE O LOGO E O FORMULÁRIO
+                Text(
+                    text = "Register Patient in Treatment",
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+                )
+
                 Box(
                     modifier = Modifier
                         .border(10.dp, Color(0xFFB39DDB), RoundedCornerShape(12.dp))
@@ -171,14 +179,12 @@ fun RegisterPatientFormContent(
     val cancerTypes = listOf(
         "Lung Cancer", "Breast Cancer", "Colorectal Cancer", "Prostate Cancer",
         "Skin Cancer", "Stomach Cancer", "Liver Cancer", "Cervical Cancer",
-        "Thyroid Cancer", "Esophageal Cancer"
+        "Thyroid Cancer", "Esophageal Cancer", "Other"
     )
     val validPrefixes = listOf("083", "085", "086", "087", "089")
 
     Column {
-        Text("Register Patient in Treatment", fontSize = 20.sp, color = Color.Black)
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         OutlinedTextField(
             value = name,
