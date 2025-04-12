@@ -38,6 +38,19 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // ✅ Adicione este bloco aqui:
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -74,5 +87,8 @@ dependencies {
     implementation ("com.google.firebase:firebase-storage:20.2.1")
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
     implementation ("com.google.firebase:firebase-messaging:23.1.2")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.17.0")
+    implementation("com.google.code.gson:gson:2.8.9")
 
 }
