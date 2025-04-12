@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.risetogether.FcmV1Sender
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDate
 import java.time.LocalTime
@@ -43,6 +44,7 @@ fun NotificationAcceptScreen(
 
     val volunteerId = requestData["VolunteerID"] as? String
     val patientId = requestData["CancerPatientID"] as? String
+    var patientFcmToken by remember { mutableStateOf<String?>(null) }
 
     // Load volunteer and patient info
     LaunchedEffect(requestData) {
@@ -69,13 +71,17 @@ fun NotificationAcceptScreen(
                     val name = doc.getString("CancerPatientName") ?: ""
                     val surname = doc.getString("CancerPatientSurname") ?: ""
                     patientInfo = mapOf("name" to "$name $surname")
+
+                    // 👇 PEGANDO O TOKEN DO PACIENTE AQUI
+                    patientFcmToken = doc.getString("fcmToken")
                 }
         }
     }
 
+
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Send Notification of Assistance Request Acceptance") },
+        title = { Text("Send Notification of Acceptance of Assistance Request") },
         text = {
             if (patientInfo == null || volunteerInfo == null) {
                 CircularProgressIndicator()
@@ -157,6 +163,39 @@ fun NotificationAcceptScreen(
                     .add(notificationData)
                     .addOnSuccessListener { notifRef ->
                         val notificationID = notifRef.id
+
+// 🔔 Buscar token do paciente correto e enviar push
+                        db.collection("PatientinTreatment")
+                            .document(patientId)
+                            .get()
+                            .addOnSuccessListener { document ->
+                                val token = document.getString("fcmToken")
+                                if (!token.isNullOrEmpty()) {
+                                    FcmV1Sender.sendNotification(
+                                        context = context,
+                                        fcmToken = token,
+                                        title = "Task Accepted!",
+                                        body = notificText
+                                    )
+                                }
+                            }
+
+
+                        // ✅ Enviar notificação push real via FCM V1
+                        if (!patientFcmToken.isNullOrEmpty()) {
+                            FcmV1Sender.sendNotification(
+                                context = context,
+                                fcmToken = patientFcmToken!!,
+                                title = "Accepted!",
+                                body = notificText
+                            )
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "FCM Token not founded. Notifification not Send",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
 
                         // Add message to patient UI
                         db.collection("PatientinTreatment")

@@ -37,6 +37,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.risetogether.Patient.PatientDashboardScreen
 import com.example.risetogether.ui.theme.PatientButton
+import com.google.firebase.messaging.FirebaseMessaging
 
 
 class PatientLoginScreen : ComponentActivity() {
@@ -167,6 +168,7 @@ fun PatientLoginScreenContent() {
                                 val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
                                 // 🔥 Fetch the Patient record from Firestore
+                                // 🔥 Fetch the Patient record from Firestore
                                 db.collection("PatientinTreatment").document(userId).get()
                                     .addOnSuccessListener { document ->
                                         isLoading = false
@@ -174,12 +176,40 @@ fun PatientLoginScreenContent() {
                                             val role = document.getString("role") ?: "Unknown"
 
                                             if (role.lowercase() == "patient") {  // ✅ Ensure it's "Patient"
+                                                // 🔥 Obter token FCM
+                                                FirebaseMessaging.getInstance().token
+                                                    .addOnCompleteListener { tokenTask ->
+                                                        if (tokenTask.isSuccessful) {
+                                                            val fcmToken = tokenTask.result
+                                                            println("✅ FCM Token: $fcmToken")
+
+                                                            // 🔥 Salvar token no Firestore
+                                                            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                                                                val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                                                FirebaseFirestore.getInstance().collection("PatientinTreatment")
+                                                                    .document(userId ?: "")
+                                                                    .update("fcmToken", token)
+                                                            }
+                                                                .addOnSuccessListener {
+                                                                    println("✅ Token OK!")
+                                                                }
+                                                                .addOnFailureListener { e ->
+                                                                    println("⚠️ Error Token: ${e.message}")
+                                                                }
+                                                        } else {
+                                                            println("⚠️ Error to catch a token FCM: ${tokenTask.exception?.message}")
+                                                        }
+                                                    }
+
+                                                // 🔄 Vai pra tela do Dashboard
                                                 context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                                             } else {
+                                                // 🔒 Usuário autenticado, mas não é paciente
                                                 errorMessage = "❌ Access Denied: Not authorized as a Patient."
-                                                auth.signOut()  // 🔒 Log out unauthorized users
+                                                auth.signOut()
                                             }
                                         } else {
+                                            // 🔥 Documento não encontrado no Firestore
                                             errorMessage = "❌ No Patient record found. Please contact support."
                                         }
                                     }
@@ -187,11 +217,6 @@ fun PatientLoginScreenContent() {
                                         isLoading = false
                                         errorMessage = "🔥 Firestore Error: ${e.message}"
                                     }
-                            } else {
-                                isLoading = false
-                                errorMessage = "⚠️ Login Failed: ${task.exception?.localizedMessage}"
-                            }
-                        }
 
                 }
             }
@@ -228,5 +253,9 @@ fun GradientButton(text: String, gradient: Brush, onClick: () -> Unit) {
         Text(text, fontSize = 18.sp, color = Color.Black)
 
     }
+}
+
+    }
+
 }
 
