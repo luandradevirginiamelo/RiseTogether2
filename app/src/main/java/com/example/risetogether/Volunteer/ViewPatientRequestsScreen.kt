@@ -215,9 +215,9 @@ fun ViewPatientRequestsContent() {
                         .padding(16.dp)
                 ) {
                     Text("(Latest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    Text("Requested Assistance Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Request Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Request Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(onClick = {
                         selectedRequestId = latestRequest?.get("requestId")
@@ -236,9 +236,9 @@ fun ViewPatientRequestsContent() {
                         .padding(16.dp)
                 ) {
                     Text("(Earliest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    Text("Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Task Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(onClick = {
                         selectedRequestId = earliestRequest?.get("requestId")
@@ -412,15 +412,18 @@ fun ViewPatientRequestPopup(
         )
     }
 
-
-    // ✅ Show confirmation for Rejected
     if (showRejectPopup && requestData != null) {
         NotificationRejectScreen(
             requestData = requestData!!,
             onClose = {
                 showRejectPopup = false
                 onDismiss()
+            },
+            onNotificationSent = {
+                showRejectPopup = false
+                onDismiss()
             }
         )
     }
+
 }

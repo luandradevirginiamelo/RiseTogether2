@@ -52,13 +52,22 @@ fun ViewNotificationsRemindersContent() {
 
     var showPopup by remember { mutableStateOf(false) }
     var selectedRequestId by remember { mutableStateOf<String?>(null) }
+    var patCancerType by remember { mutableStateOf("") }
 
-
-
-    // Load weeks
     LaunchedEffect(volunteerId) {
-        db.collection("CancerPatientRequestFormRequiredAssistTask")
-            .whereEqualTo("VolunteerID", volunteerId)
+        val patientId = auth.currentUser?.uid ?: ""
+        db.collection("PatientinTreatment")
+            .document(patientId)
+            .get()
+            .addOnSuccessListener { doc ->
+                patCancerType = doc.getString("PatCancerType") ?: ""
+            }
+    }
+
+    LaunchedEffect(volunteerId) {
+        val patientId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        db.collection("NotificationOfPatientRequest")
+            .whereEqualTo("PatID", patientId)
             .get()
             .addOnSuccessListener { snapshot ->
                 val weeks = snapshot.documents.mapNotNull { it.getString("WeekCommenceDate") }.distinct()
@@ -66,37 +75,40 @@ fun ViewNotificationsRemindersContent() {
             }
     }
 
-    fun fetchRequestsForWeek(week: String) {
-        db.collection("CancerPatientRequestFormRequiredAssistTask")
-            .whereEqualTo("VolunteerID", volunteerId)
+
+    fun fetchNotificationsForWeek(week: String) {
+        val patientId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        db.collection("NotificationOfPatientRequest")
+            .whereEqualTo("PatID", patientId)
             .whereEqualTo("WeekCommenceDate", week)
             .get()
             .addOnSuccessListener { documents ->
-                val sorted = documents.sortedBy {
-                    val date = it.getString("RequestDate") ?: ""
-                    val time = it.getString("RequestTime") ?: ""
+                val sorted = documents.sortedByDescending {
+                    val date = it.getString("NotificDate") ?: ""
+                    val time = it.getString("NotificTime") ?: ""
                     "$date $time"
                 }
 
-                earliestRequest = sorted.firstOrNull()?.let {
+                latestRequest = sorted.firstOrNull()?.let {
                     mapOf(
                         "name" to (it.getString("AssistTaskName") ?: "N/A"),
-                        "date" to (it.getString("RequestDate") ?: ""),
-                        "time" to (it.getString("RequestTime") ?: ""),
-                        "requestId" to (it.getString("PatientRequestFormID") ?: "")
+                        "date" to (it.getString("NotificDate") ?: ""),
+                        "time" to (it.getString("NotificTime") ?: ""),
+                        "requestId" to it.id // Usar ID do documento da notificação!
                     )
                 }
 
-                latestRequest = sorted.lastOrNull()?.let {
+                earliestRequest = sorted.lastOrNull()?.let {
                     mapOf(
                         "name" to (it.getString("AssistTaskName") ?: "N/A"),
-                        "date" to (it.getString("RequestDate") ?: ""),
-                        "time" to (it.getString("RequestTime") ?: ""),
-                        "requestId" to (it.getString("PatientRequestFormID") ?: "")
+                        "date" to (it.getString("NotificDate") ?: ""),
+                        "time" to (it.getString("NotificTime") ?: ""),
+                        "requestId" to it.id
                     )
                 }
             }
     }
+
 
     Box(
         modifier = Modifier
@@ -169,7 +181,7 @@ fun ViewNotificationsRemindersContent() {
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Text("View List of Patient’s Requests for Assistance", fontSize = 20.sp, color = Color.Black)
+                Text("List of Notifications for Requests Acceptance/Rejections", fontSize = 20.sp, color = Color.Black)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -199,7 +211,7 @@ fun ViewNotificationsRemindersContent() {
                                 onClick = {
                                     selectedWeek = week
                                     weekExpanded = false
-                                    fetchRequestsForWeek(week)
+                                    fetchNotificationsForWeek(week)
                                 }
                             )
                         }
@@ -215,9 +227,9 @@ fun ViewNotificationsRemindersContent() {
                         .padding(16.dp)
                 ) {
                     Text("(Latest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    Text("Requested Assistance Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Request Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Request Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(onClick = {
                         selectedRequestId = latestRequest?.get("requestId")
@@ -236,9 +248,9 @@ fun ViewNotificationsRemindersContent() {
                         .padding(16.dp)
                 ) {
                     Text("(Earliest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    Text("Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Task Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Notification Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(onClick = {
                         selectedRequestId = earliestRequest?.get("requestId")
@@ -302,119 +314,57 @@ fun ViewPatientRequestPopup(
     val context = LocalContext.current
 
     var requestData by remember { mutableStateOf<Map<String, Any>?>(null) }
-    var volunteerName by remember { mutableStateOf("") }
-    var patientInfo by remember { mutableStateOf<Map<String, String>?>(null) }
-    var showAcceptPopup by remember { mutableStateOf(false) }
-    var showRejectPopup by remember { mutableStateOf(false) }
+
 
     // Load data
     LaunchedEffect(requestId) {
-        db.collection("CancerPatientRequestFormRequiredAssistTask")
+        db.collection("NotificationOfPatientRequest")
             .document(requestId)
             .get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    requestData = doc.data
-                    val patientId = doc.getString("CancerPatientID") ?: ""
+                    val data = doc.data?.toMutableMap() ?: mutableMapOf()
                     val volunteerId = doc.getString("VolunteerID") ?: ""
+                    val patientId = doc.getString("PatID") ?: ""
 
                     db.collection("VolunteeringCancerSurvivor")
                         .document(volunteerId)
                         .get()
-                        .addOnSuccessListener {
-                            val name = it.getString("VolunteerName") ?: ""
-                            val surname = it.getString("VolunteerSurname") ?: ""
-                            volunteerName = "$name $surname"
-                        }
+                        .addOnSuccessListener { vol ->
+                            data["VoluntNam+Surnam"] = "${vol.getString("VolunteerName")} ${vol.getString("VolunteerSurname")}"
+                            data["VoluntEmail"] = vol.getString("VolunteerUsername") ?: ""
+                            data["VoluntMobile"] = vol.getString("VolunMobile") ?: ""
 
-                    db.collection("PatientinTreatment")
-                        .document(patientId)
-                        .get()
-                        .addOnSuccessListener { pat ->
-                            patientInfo = mapOf(
-                                "name" to "${pat.getString("CancerPatientName") ?: ""} ${pat.getString("CancerPatientSurname") ?: ""}",
-                                "email" to (pat.getString("PatientUsernameEmail") ?: ""),
-                                "mobile" to (pat.getString("PatientMobileNo") ?: "")
-                            )
+                            db.collection("PatientinTreatment")
+                                .document(patientId)
+                                .get()
+                                .addOnSuccessListener { pat ->
+                                    data["PatNam+Surnam"] = "${pat.getString("CancerPatientName")} ${pat.getString("CancerPatientSurname")}"
+                                    requestData = data // ✅ Agora sim o mapa está pronto
+                                }
                         }
-                }
             }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Patient Request Details") },
-        text = {
-            if (requestData == null || patientInfo == null) {
-                CircularProgressIndicator()
-            } else {
-                val taskName = requestData?.get("AssistTaskName") ?: "N/A"
-                val week = requestData?.get("WeekCommenceDate") ?: "N/A"
-                val day1 = requestData?.get("Day1 Availability") ?: ""
-                val day2 = requestData?.get("Day2 Availability") ?: ""
+    }
 
-                val time1AM = requestData?.get("Day 1 AM") as? String?
-                val time1PM = requestData?.get("Day 1 PM") as? String?
-                val time2AM = requestData?.get("Day 2 AM") as? String?
-                val time2PM = requestData?.get("Day 2 PM") as? String?
+    val status = requestData?.get("RequestStatus") ?: ""
 
-                val preferredDay = if (!day1.toString().isNullOrEmpty()) day1 else day2
-                val preferredTime = when {
-                    !time1AM.isNullOrEmpty() -> time1AM
-                    !time1PM.isNullOrEmpty() -> time1PM
-                    !time2AM.isNullOrEmpty() -> time2AM
-                    !time2PM.isNullOrEmpty() -> time2PM
-                    else -> "N/A"
-                }
-
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text("Dear $volunteerName,", fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("I am sending you here my request for assistance with the task \"$taskName\" for the week that commences on $week.", fontSize = 14.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("My preferred Day from your Profile Schedule is: $preferredDay", fontSize = 14.sp)
-                    Text("My preferred Time for that day is: $preferredTime", fontSize = 14.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Sincerely, ${patientInfo?.get("name")}")
-                    Text("Email: ${patientInfo?.get("email")}")
-                    Text("Mobile: ${patientInfo?.get("mobile")}")
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = { showAcceptPopup = true }) {
-                Text("Accept Request")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = { showRejectPopup = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-            ) {
-                Text("Reject Request", color = Color.White)
-            }
+    if (requestData != null) {
+        if (status == "Accepted") {
+            DisplayNotificationAcceptScreen(
+                requestData = requestData!!,
+                onClose = { onDismiss() }
+            )
+        } else if (status == "Rejected") {
+            DisplayNotificationRejectScreen(
+                requestData = requestData!!,
+                onClose = { onDismiss() }
+            )
         }
-    )
 
-    // ✅ Show confirmation for Accepted
-    if (showAcceptPopup && requestData != null) {
-        DisplayNotificationAcceptScreen(
-            requestData = requestData!!,
-            onClose = {
-                showAcceptPopup = false
-                onDismiss()
-            }
-        )
     }
 
-    // ✅ Show confirmation for Rejected
-    if (showRejectPopup && requestData != null) {
-        DisplayNotificationRejectScreen(
-            requestData = requestData!!,
-            onClose = {
-                showRejectPopup = false
-                onDismiss()
-            }
-        )
-    }
 }
+
+

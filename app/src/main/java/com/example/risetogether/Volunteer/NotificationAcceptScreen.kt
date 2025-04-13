@@ -72,7 +72,7 @@ fun NotificationAcceptScreen(
                     val surname = doc.getString("CancerPatientSurname") ?: ""
                     patientInfo = mapOf("name" to "$name $surname")
 
-                    // 👇 PEGANDO O TOKEN DO PACIENTE AQUI
+                    // 👇 Token of the patient
                     patientFcmToken = doc.getString("fcmToken")
                 }
         }
@@ -91,7 +91,7 @@ fun NotificationAcceptScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        "Your request for assistance with the task \"$taskName\" on the requested day ($preferredDay), " +
+                        "Your request for assistance with task \"$taskName\" on the requested day ($preferredDay), " +
                                 "for the week commencing $weekStart has been $status.",
                         fontSize = 14.sp
                     )
@@ -133,7 +133,7 @@ fun NotificationAcceptScreen(
 
                 // Build notification
                 val notificText =
-                    "Your request for assistance with the task \"$taskName\" on the requested day ($preferredDay), for the week commencing $weekStart has been $status."
+                    "Your request for assistance with task \"$taskName\" on the requested day ($preferredDay), for the week commencing $weekStart has been $status."
 
                 val notificDate = LocalDate.now().toString()
                 val notificTime = LocalTime.now().toString()
