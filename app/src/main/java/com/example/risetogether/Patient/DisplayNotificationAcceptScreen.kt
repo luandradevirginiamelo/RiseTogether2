@@ -14,34 +14,45 @@ fun DisplayNotificationAcceptScreen(
     requestData: Map<String, Any>,
     onClose: () -> Unit
 ) {
-    val patientName = requestData["CancerPatientFullName"] ?: "Patient"
-    val taskName = requestData["AssistTaskName"] ?: "N/A"
-    val weekStart = requestData["WeekCommenceDate"] ?: "N/A"
-    val dayRequested = requestData["SelectedDayRequested"] ?: "Requested Day"
-    val status = requestData["Status"] ?: "Accepted"
+    val patientFullName = requestData["PatNam+Surnam"] ?: "Patient"
+    val assistTaskName = requestData["AssistTaskName"] ?: "N/A"
+    val weekCommenceDate = requestData["WeekCommenceDate"] ?: "N/A"
+    val requestedDay = requestData["RequestedDay"] ?: "N/A"
+    val status = requestData["RequestStatus"] ?: "Accepted"
 
-    val volunteerName = requestData["VolunteerFullName"] ?: "Volunteer"
-    val volunteerEmail = requestData["VolunteerEmail"] ?: "-"
-    val volunteerMobile = requestData["VolunteerMobile"] ?: "-"
+    val volunteerFullName = requestData["VoluntNam+Surnam"] ?: "Volunteer"
+    val volunteerEmail = requestData["VoluntEmail"] ?: "-"
+    val volunteerMobile = requestData["VoluntMobile"] ?: "-"
 
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Notification of Task Acceptance") },
+        title = {
+            Text("Notification of Acceptance of Requested Task Assistance")
+        },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(8.dp)) {
+
                 Text(
-                    "Dear $patientName,", fontSize = 16.sp
+                    text = "Dear $patientFullName,",
+                    fontSize = 16.sp
                 )
+
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    "Your request for assistance with task \"$taskName\" on the requested day ($dayRequested) " +
-                            "for Week Commencing $weekStart has been $status.", fontSize = 14.sp
+                    text = "Your request for assistance with task \"$assistTaskName\" on the requested day ($requestedDay) for Week Commencing ($weekCommenceDate) has been $status.",
+                    fontSize = 14.sp
                 )
+
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text("Will see you then!", fontSize = 14.sp)
-                Spacer(modifier = Modifier.height(12.dp))
-                Text("Sincerely,", fontSize = 14.sp)
-                Text(volunteerName.toString(), fontSize = 14.sp)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Sincerely, $volunteerFullName", fontSize = 14.sp)
                 Text("Email: $volunteerEmail", fontSize = 14.sp)
                 Text("Mobile No: $volunteerMobile", fontSize = 14.sp)
             }
@@ -53,5 +64,4 @@ fun DisplayNotificationAcceptScreen(
         }
     )
 }
-
 
