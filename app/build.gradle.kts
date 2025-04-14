@@ -90,5 +90,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.17.0")
     implementation("com.google.code.gson:gson:2.8.9")
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
 }

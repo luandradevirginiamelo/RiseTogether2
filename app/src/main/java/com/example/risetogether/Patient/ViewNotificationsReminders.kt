@@ -8,18 +8,22 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.example.risetogether.VolunteerLoginScreen
 import com.google.firebase.auth.FirebaseAuth
@@ -134,22 +138,187 @@ fun ViewNotificationsRemindersContent() {
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
-                                contentDescription = "Logo",
+                                contentDescription = "App Logo",
                                 modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(MaterialTheme.shapes.small)
+                                    .size(130.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                             )
                             Spacer(modifier = Modifier.weight(1f))
-                            Button(onClick = {
-                                auth.signOut()
-                                context.startActivity(Intent(context, VolunteerLoginScreen::class.java))
-                            }) {
-                                Text("Logout")
-                            }
+                            // ✅ Botão Logout padrão
+                            SmallGradientButton(
+                                text = "Logout",
+                                onClick = {
+                                    auth.signOut()
+                                    context.startActivity(Intent(context, PatientLoginScreen::class.java))
+                                }
+                            )
                         }
                     }
                 )
-                // ✅ INSIRA AQUI O POP-UP DENTRO DO BOX!
+
+            }
+                ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(8.dp, RoundedCornerShape(12.dp))
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .padding(16.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "List of Notifications for Requests Acceptance/Rejections",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1A237E)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                "Select Week Commence Date:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF0D47A1)
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            ExposedDropdownMenuBox(
+                                expanded = weekExpanded,
+                                onExpandedChange = { weekExpanded = !weekExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedWeek,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    modifier = Modifier.menuAnchor(),
+                                    label = { Text("Week") },
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = weekExpanded)
+                                    }
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = weekExpanded,
+                                    onDismissRequest = { weekExpanded = false }
+                                ) {
+                                    availableWeeks.forEach { week ->
+                                        DropdownMenuItem(
+                                            text = { Text(week) },
+                                            onClick = {
+                                                selectedWeek = week
+                                                weekExpanded = false
+                                                fetchNotificationsForWeek(week)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // LATEST
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFF1F8E9), RoundedCornerShape(8.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "📌 Latest Notification",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF33691E)
+                                )
+                                Text("Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                Text("Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                Text("Time: ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        selectedRequestId = latestRequest?.get("requestId")
+                                        showPopup = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF4CAF50),
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    Text("View")
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // EARLIEST
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "⏳ Earliest Notification",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0D47A1)
+                                )
+                                Text("Task Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                Text("Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                Text("Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        selectedRequestId = earliestRequest?.get("requestId")
+                                        showPopup = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF4CAF50),
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    Text("View")
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    PatientButton(
+                        text = "Select Another Week Commence Date",
+                        onClick = {
+                            selectedWeek = ""
+                            latestRequest = null
+                            earliestRequest = null
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    PatientButton(
+                        text = "Back to Dashboard",
+                        onClick = {
+                            context.startActivity(Intent(context, PatientDashboardScreen::class.java))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // ✅ Chamada correta do popup, FORA do Scaffold
                 if (showPopup && selectedRequestId != null) {
                     ViewPatientRequestPopup(
                         requestId = selectedRequestId!!,
@@ -158,213 +327,72 @@ fun ViewNotificationsRemindersContent() {
                             selectedRequestId = null
                         },
                         onAccept = {
-                            // TODO: update Firestore status to "Accepted"
                             showPopup = false
                         },
                         onReject = {
-                            // TODO: update Firestore status to "Rejected"
                             showPopup = false
                         }
                     )
                 }
-
             }
-
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text("List of Notifications for Requests Acceptance/Rejections", fontSize = 20.sp, color = Color.Black)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Select Week Commence Date:", fontSize = 16.sp, color = Color.Black)
-
-                ExposedDropdownMenuBox(
-                    expanded = weekExpanded,
-                    onExpandedChange = { weekExpanded = !weekExpanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedWeek,
-                        onValueChange = {},
-                        readOnly = true,
-                        modifier = Modifier.menuAnchor(),
-                        label = { Text("Week") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = weekExpanded)
-                        }
-                    )
-                    ExposedDropdownMenu(
-                        expanded = weekExpanded,
-                        onDismissRequest = { weekExpanded = false }
-                    ) {
-                        availableWeeks.forEach { week ->
-                            DropdownMenuItem(
-                                text = { Text(week) },
-                                onClick = {
-                                    selectedWeek = week
-                                    weekExpanded = false
-                                    fetchNotificationsForWeek(week)
-                                }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, MaterialTheme.shapes.medium)
-                        .padding(16.dp)
-                ) {
-                    Text("(Latest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    Text("Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Notification Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Notification Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Button(onClick = {
-                        selectedRequestId = latestRequest?.get("requestId")
-                        showPopup = true
-                    }) {
-                        Text("View")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, MaterialTheme.shapes.medium)
-                        .padding(16.dp)
-                ) {
-                    Text("(Earliest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                    Text("Task Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Notification Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Notification Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Button(onClick = {
-                        selectedRequestId = earliestRequest?.get("requestId")
-                        showPopup = true
-                    }) {
-                        Text("View")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Button(onClick = {
-                    selectedWeek = ""
-                    latestRequest = null
-                    earliestRequest = null
-                }) {
-                    Text("Select Another Week Commence Date")
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(onClick = {
-                    context.startActivity(Intent(context, PatientDashboardScreen::class.java))
-                }) {
-                    Text("Back to Dashboard")
-                }
-            }
-        }
-
-        // 🔥 Show popup
-        if (showPopup && selectedRequestId != null) {
-            ViewPatientRequestPopup(
-                requestId = selectedRequestId!!,
-                onDismiss = {
-                    showPopup = false
-                    selectedRequestId = null
-                },
-                onAccept = {
-                    // TODO: update status in Firestore
-                    showPopup = false
-                },
-                onReject = {
-                    // TODO: update status in Firestore
-                    showPopup = false
-                }
-            )
-
-        }
-    }
-}
-
-@Composable
-fun ViewPatientRequestPopup(
-    requestId: String,
-    onDismiss: () -> Unit,
-    onAccept: () -> Unit,
-    onReject: () -> Unit
-) {
-    val db = FirebaseFirestore.getInstance()
-    val auth = FirebaseAuth.getInstance()
-    val context = LocalContext.current
-
-    var requestData by remember { mutableStateOf<Map<String, Any>?>(null) }
-
-
-    // Load data
-    LaunchedEffect(requestId) {
-        db.collection("NotificationOfPatientRequest")
-            .document(requestId)
-            .get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    val data = doc.data?.toMutableMap() ?: mutableMapOf()
-                    val volunteerId = doc.getString("VolunteerID") ?: ""
-                    val patientId = doc.getString("PatID") ?: ""
-
-                    db.collection("VolunteeringCancerSurvivor")
-                        .document(volunteerId)
-                        .get()
-                        .addOnSuccessListener { vol ->
-                            data["VoluntNam+Surnam"] = "${vol.getString("VolunteerName")} ${vol.getString("VolunteerSurname")}"
-                            data["VoluntEmail"] = vol.getString("VolunteerUsername") ?: ""
-                            data["VoluntMobile"] = vol.getString("VolunMobile") ?: ""
-
-                            db.collection("PatientinTreatment")
-                                .document(patientId)
-                                .get()
-                                .addOnSuccessListener { pat ->
-                                    data["PatNam+Surnam"] = "${pat.getString("CancerPatientName")} ${pat.getString("CancerPatientSurname")}"
-                                    requestData = data // ✅ Agora sim o mapa está pronto
-                                }
-                        }
             }
     }
 
-    }
+    // ✅ FUNÇÃO AGORA FORA DA CLASSE
+    @Composable
+    fun ViewPatientRequestPopup(
+        requestId: String,
+        onDismiss: () -> Unit,
+        onAccept: () -> Unit,
+        onReject: () -> Unit
+    ) {
+        val db = FirebaseFirestore.getInstance()
+        val context = LocalContext.current
 
-    val status = requestData?.get("RequestStatus") ?: ""
+        var requestData by remember { mutableStateOf<Map<String, Any>?>(null) }
 
-    if (requestData != null) {
-        if (status == "Accepted") {
-            DisplayNotificationAcceptScreen(
-                requestData = requestData!!,
-                onClose = { onDismiss() }
-            )
-        } else if (status == "Rejected") {
-            DisplayNotificationRejectScreen(
-                requestData = requestData!!,
-                onClose = { onDismiss() }
-            )
+        LaunchedEffect(requestId) {
+            db.collection("NotificationOfPatientRequest")
+                .document(requestId)
+                .get()
+                .addOnSuccessListener { doc ->
+                    if (doc.exists()) {
+                        val data = doc.data?.toMutableMap() ?: mutableMapOf()
+                        val volunteerId = doc.getString("VolunteerID") ?: ""
+                        val patientId = doc.getString("PatID") ?: ""
+
+                        db.collection("VolunteeringCancerSurvivor")
+                            .document(volunteerId)
+                            .get()
+                            .addOnSuccessListener { vol ->
+                                data["VoluntNam+Surnam"] = "${vol.getString("VolunteerName")} ${vol.getString("VolunteerSurname")}"
+                                data["VoluntEmail"] = vol.getString("VolunteerUsername") ?: ""
+                                data["VoluntMobile"] = vol.getString("VolunMobile") ?: ""
+
+                                db.collection("PatientinTreatment")
+                                    .document(patientId)
+                                    .get()
+                                    .addOnSuccessListener { pat ->
+                                        data["PatNam+Surnam"] = "${pat.getString("CancerPatientName")} ${pat.getString("CancerPatientSurname")}"
+                                        requestData = data
+                                    }
+                            }
+                    }
+                }
         }
 
+        val status = requestData?.get("RequestStatus") ?: ""
+
+        if (requestData != null) {
+            when (status) {
+                "Accepted" -> DisplayNotificationAcceptScreen(
+                    requestData = requestData!!,
+                    onClose = onDismiss
+                )
+                "Rejected" -> DisplayNotificationRejectScreen(
+                    requestData = requestData!!,
+                    onClose = onDismiss
+                )
+            }
+        }
     }
-
-}
-
-

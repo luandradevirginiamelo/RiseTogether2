@@ -35,6 +35,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.example.risetogether.VolunteerLoginScreen
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
+import coil.compose.rememberAsyncImagePainter
 
 class VolunteerProfileScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,6 +79,7 @@ fun VolunteerProfileScreenContent() {
     var refreshTrigger by remember { mutableStateOf(0) } //
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isSaveEnabled by remember { mutableStateOf(true) }
 
     // 🔥 Variável para armazenar o ID do perfil do voluntário criado no Firestore
     var volunteerProfileID by remember { mutableStateOf("") }
@@ -389,7 +391,7 @@ fun VolunteerProfileScreenContent() {
                         ) {
                             Text(
                                 text = text,
-                                fontSize = 20.sp,
+                                fontSize = 15.sp,
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
@@ -399,16 +401,57 @@ fun VolunteerProfileScreenContent() {
                     }
                 }
 
+                // 🎯 Continua igual, sem mudar a lógica
                 val galleryLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.GetContent()
                 ) { uri: Uri? ->
                     imageUri = uri // Armazena a URI da imagem selecionada
                 }
 
-                GradientButton(text = "Open Phone Gallery") {
-                    galleryLauncher.launch("image/*") // Abre a galeria para selecionar uma imagem
+// ✅ Container branco que envolve o botão de upload ou a imagem
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(4.dp, RoundedCornerShape(12.dp))
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (imageUri == null) {
+                            // ✅ Antes do upload – mostra texto + botão
+                            Text(
+                                text = "Upload your recent photo:",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp) // Mais colado no botão
+                            )
+
+                            GradientButton(text = "Open Phone Gallery") {
+                                galleryLauncher.launch("image/*")
+                            }
+                        } else {
+                            // ✅ Depois do upload – mostra imagem selecionada
+                            Image(
+                                painter = rememberAsyncImagePainter(model = imageUri),
+                                contentDescription = "Selected Image",
+                                modifier = Modifier
+                                    .size(180.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .shadow(4.dp)
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
                 }
 
+                // ✅ Função de upload sem nenhuma mudança
                 fun uploadImageToFirebaseStorage(onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
                     val uri = imageUri ?: return
                     val storageRef = FirebaseStorage.getInstance().reference
@@ -424,7 +467,6 @@ fun VolunteerProfileScreenContent() {
                             onFailure(exception)
                         }
                 }
-
                 GradientButton(text = if (isSaving) "Saving..." else "Save") {
                     val userId = auth.currentUser?.uid ?: return@GradientButton
 
@@ -550,6 +592,8 @@ fun VolunteerProfileScreenContent() {
 
                     selectedDays = "" // 🔥 Reset days selection
                     daysExpanded = false
+
+                    imageUri = null // 🔥 Faz o botão reaparecer
 
                     refreshTrigger++ // 🔥 Forces the app to reload fresh data next time!
                 }
