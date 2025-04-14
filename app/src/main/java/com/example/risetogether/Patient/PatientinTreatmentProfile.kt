@@ -66,6 +66,7 @@ fun PatientinTreatmentProfileContent() {
     var selectedDays by remember { mutableStateOf("") } // Começa vazio
     var daysExpanded by remember { mutableStateOf(false) }
     var AssistTaskCatID by remember { mutableStateOf("") }
+    var isSaveEnabled by remember { mutableStateOf(true) }
 
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -79,7 +80,10 @@ fun PatientinTreatmentProfileContent() {
                 .width(105.dp) // 🔹 Largura específica do Dashboard
                 .padding(end = 8.dp), // 🔹 Adiciona espaçamento para alinhar corretamente
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.LightGray // 👈 changing colour after disability
+            )
         ) {
             Box(
                 modifier = Modifier
@@ -349,9 +353,10 @@ fun PatientinTreatmentProfileContent() {
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 @Composable
-                fun GradientButton(text: String, onClick: () -> Unit) {
+                fun GradientButton(text: String, enabled: Boolean = true, onClick: () -> Unit) {
                     Button(
                         onClick = onClick,
+                        enabled = enabled, // ← Habilita/desabilita o botão
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(75.dp)
@@ -363,9 +368,15 @@ fun PatientinTreatmentProfileContent() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul
-                                    ),
+                                    if (enabled) {
+                                        Brush.horizontalGradient(
+                                            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5))
+                                        )
+                                    } else {
+                                        Brush.horizontalGradient(
+                                            colors = listOf(Color.LightGray, Color.Gray) // 👈 degrade cinza claro
+                                        )
+                                    },
                                     shape = RoundedCornerShape(12.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -383,8 +394,8 @@ fun PatientinTreatmentProfileContent() {
                 }
 
 
-// 🔥 Botão Save com Validação
-                GradientButton(text = "Save") {
+                // 🔥 Botão Save com Validação
+                GradientButton(text = "Save", enabled = isSaveEnabled) {
                     val userId = auth.currentUser?.uid ?: return@GradientButton
 
                     // 🔥 Validação: Verifica se todos os campos foram preenchidos
@@ -408,6 +419,7 @@ fun PatientinTreatmentProfileContent() {
                         .addOnSuccessListener {
                             errorMessage = null
                             Toast.makeText(context, "Patient in Treatment Profile Record Successfully Created!", Toast.LENGTH_LONG).show()
+                            isSaveEnabled = false // 👈 desativa o botão após salvar com sucesso
                         }
                         .addOnFailureListener {
                             Toast.makeText(context, "Error saving data.", Toast.LENGTH_LONG).show()
@@ -417,6 +429,7 @@ fun PatientinTreatmentProfileContent() {
                 Spacer(modifier = Modifier.height(5.dp))
 
                 GradientButton(text = "Another Assistance Task") {
+                    isSaveEnabled = true
                     selectedCategory = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
                     categoryExpanded = false
 

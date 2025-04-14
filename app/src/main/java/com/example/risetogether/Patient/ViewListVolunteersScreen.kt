@@ -285,7 +285,7 @@ fun ViewListVolunteersScreenContent() {
                                 selectedVolunteer = ""
                                 volunteerOptions = listOf()
 
-                                println("📂 Categoria Selecionada: $selectedCategory")
+                                println("📂 Selected category: $selectedCategory")
                             }
                         )
 
@@ -303,16 +303,16 @@ fun ViewListVolunteersScreenContent() {
                                 selectedVolunteer = ""
                                 volunteerOptions = listOf()
 
-                                println("🎯 Tarefa Selecionada: $selectedTask (TaskID: $selectedTaskID)")
+                                println("🎯 Selected Task: $selectedTask (TaskID: $selectedTaskID)")
                             }
                         )
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 🔹 Texto antes dos voluntários (substitui o botão)
+                        // 🔹 Text before the volunteers
                         if (volunteerOptions.isNotEmpty()) {
                             Text(
-                                text = "Available Volunteers for Selected Task:",
+                                text = "Select Volunteer for the Selected Assistance Task :",
                                 fontSize = 16.sp,
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold
@@ -322,26 +322,18 @@ fun ViewListVolunteersScreenContent() {
                         Spacer(modifier = Modifier.height(10.dp))
 
 
-                        // 🔹 Texto antes dos voluntários (substitui o botão)
-                        if (volunteerOptions.isNotEmpty()) {
-                            Text(
-                                text = "Select a volunteer available below:",
-                                fontSize = 16.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // 🔹 Lista de Voluntários (só aparece se houver opções)
+                        // 🔹 List of volunteers
                         Column {
                             if (volunteerOptions.isEmpty() && selectedTask.isNotBlank()) {
                                 Text("No volunteers available", fontSize = 16.sp, color = Color.Red)
                             } else {
                                 volunteerOptions.forEach { volunteer ->
+                                    val isUnavailable = volunteer == "No volunteers available"
+
                                     Button(
                                         onClick = {
+                                            if (isUnavailable) return@Button // botão desabilitado, não faz nada
+
                                             selectedVolunteer = volunteer
 
                                             val userId = auth.currentUser?.uid ?: return@Button
@@ -360,7 +352,7 @@ fun ViewListVolunteersScreenContent() {
                                                     if (!documents.isEmpty) {
                                                         val selectedVolunteerID = documents.first().id
 
-                                                        // 🔥 Buscar perfil do voluntário (sem atualizar AssignedVolunteerID)
+                                                        // 🔥 Buscar perfil do voluntário
                                                         db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory")
                                                             .whereEqualTo("VolunteerID", selectedVolunteerID)
                                                             .whereEqualTo("AssistTaskID", selectedTaskID)
@@ -393,17 +385,27 @@ fun ViewListVolunteersScreenContent() {
                                                     println("❌ Error to find a volunteer: ${exception.message}")
                                                 }
                                         },
+                                        enabled = !isUnavailable,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(vertical = 4.dp),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isUnavailable) Color.LightGray else Color(0xFF4CAF50),
+                                            contentColor = Color.White
+                                        )
                                     ) {
-                                        Text(volunteer, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                                        Text(
+                                            text = volunteer,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
                                     }
                                 }
                             }
                         }
+
                     }
 
                     // 🔥 Componente de Dropdown ÚNICO para Categoria e Task
@@ -485,7 +487,7 @@ fun DropdownComponent(
                         val taskID = taskIDs.getOrNull(index) ?: ""
                         onValueChange(option, taskID)
                         expanded = false
-                        println("✅ Selecionado: $option (TaskID: $taskID)")
+                        println("✅ Selected: $option (TaskID: $taskID)")
                     }
                 )
             }
