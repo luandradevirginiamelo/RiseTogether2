@@ -50,7 +50,7 @@ object FcmV1Sender {
                 val response = client.newCall(request).execute()
 
                 if (response.isSuccessful) {
-                    Log.d("FCM-V1", "✅ Notificação enviada com sucesso!")
+                    Log.d("FCM-V1", "✅ Notification SENT!")
                 } else {
                     Log.e("FCM-V1", "❌ Erro: ${response.code} - ${response.message}")
                 }
