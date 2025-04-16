@@ -36,10 +36,10 @@ fun NotificationRejectScreen(
         ?: requestData["Day2 Availability"] as? String?
         ?: "N/A"
 
-    val timeRequested = requestData["Selected AM Day 1"]
-        ?: requestData["Selected PM Day 1"]
-        ?: requestData["Selected AM Day 2"]
-        ?: requestData["Selected PM Day 2"]
+    val timeRequested = requestData["Day 1 AM"] as? String?
+        ?: requestData["Day 1 PM"] as? String?
+        ?: requestData["Day 2 AM"] as? String?
+        ?: requestData["Day 2 PM"] as? String?
         ?: "N/A"
 
     val status = "Rejected"

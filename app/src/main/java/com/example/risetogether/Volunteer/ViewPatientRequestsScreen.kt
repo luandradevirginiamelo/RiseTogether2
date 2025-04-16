@@ -214,7 +214,6 @@ fun ViewPatientRequestsContent() {
                         .background(Color.White, MaterialTheme.shapes.medium)
                         .padding(16.dp)
                 ) {
-                    Text("(Latest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     Text("Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
@@ -235,7 +234,6 @@ fun ViewPatientRequestsContent() {
                         .background(Color.White, MaterialTheme.shapes.medium)
                         .padding(16.dp)
                 ) {
-                    Text("(Earliest Requested Assistance Task by: Requested Date and Time)", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                     Text("Task Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
@@ -352,21 +350,25 @@ fun ViewPatientRequestPopup(
             } else {
                 val taskName = requestData?.get("AssistTaskName") ?: "N/A"
                 val week = requestData?.get("WeekCommenceDate") ?: "N/A"
-                val day1 = requestData?.get("Day1 Availability") ?: ""
-                val day2 = requestData?.get("Day2 Availability") ?: ""
-
+                val day1 = requestData?.get("Day1 Availability") as? String?
+                val day2 = requestData?.get("Day2 Availability") as? String?
                 val time1AM = requestData?.get("Day 1 AM") as? String?
                 val time1PM = requestData?.get("Day 1 PM") as? String?
                 val time2AM = requestData?.get("Day 2 AM") as? String?
                 val time2PM = requestData?.get("Day 2 PM") as? String?
 
-                val preferredDay = if (!day1.toString().isNullOrEmpty()) day1 else day2
+                val preferredDay = if (!day1.isNullOrEmpty()) day1 else day2
                 val preferredTime = when {
                     !time1AM.isNullOrEmpty() -> time1AM
                     !time1PM.isNullOrEmpty() -> time1PM
                     !time2AM.isNullOrEmpty() -> time2AM
                     !time2PM.isNullOrEmpty() -> time2PM
                     else -> "N/A"
+                }
+
+                requestData = requestData?.toMutableMap()?.apply {
+                    put("RequestedDay", preferredDay ?: "N/A")
+                    put("RequestedTime", preferredTime ?: "N/A")
                 }
 
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {

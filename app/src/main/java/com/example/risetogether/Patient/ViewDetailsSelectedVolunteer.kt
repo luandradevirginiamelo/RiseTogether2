@@ -118,6 +118,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     val db = FirebaseFirestore.getInstance()
     val context = LocalContext.current
 
+    val alreadyRequestedDays = remember { mutableStateListOf<String>() }
     var email by remember { mutableStateOf("") }
     var mobile by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
@@ -270,6 +271,7 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                     itemsIndexed(availabilityList.take(5)) { index, item ->
                         val selection = daySelections[index]
+                        val isAlreadySent = alreadyRequestedDays.contains(item.dayLabel)
 
                         availabilityList.sortBy {
                             listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday").indexOf(it.dayLabel)
@@ -319,7 +321,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                     ),
                                                     shape = RoundedCornerShape(6.dp)
                                                 )
-                                                .clickable {
+                                                .clickable(enabled = !isAlreadySent) {
                                                     selection.isSelectedDay = !selection.isSelectedDay
 
                                                     // ⚠️ Desmarcar AM/PM se o dia for desmarcado
@@ -331,7 +333,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
-                                                text = if (selection.isSelectedDay) "Selected" else "Select",
+                                                text = if (isAlreadySent) "Sent" else if (selection.isSelectedDay) "Selected" else "Select",
                                                 color = Color.Black,
                                                 fontSize = 14.sp,
                                                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -361,7 +363,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                         ),
                                                         shape = RoundedCornerShape(6.dp)
                                                     )
-                                                    .clickable(enabled = !selection.isSelectedPM) {
+                                                    .clickable(enabled = !selection.isSelectedPM && !isAlreadySent) {
                                                         selection.isSelectedAM = !selection.isSelectedAM
 
                                                         if (selection.isSelectedAM) {
@@ -403,7 +405,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                                         ),
                                                         shape = RoundedCornerShape(6.dp)
                                                     )
-                                                    .clickable(enabled = !selection.isSelectedAM) {
+                                                    .clickable(enabled = !selection.isSelectedAM && !isAlreadySent) {
                                                         selection.isSelectedPM = !selection.isSelectedPM
 
                                                         if (selection.isSelectedPM) {
@@ -462,6 +464,15 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                             var hasError = false
 
+                            // 🔄 Reset all previously selected days that were already sent
+                            daySelections.forEachIndexed { index, selection ->
+                                if (alreadyRequestedDays.contains(selection.dayLabel)) {
+                                    selection.isSelectedDay = false
+                                    selection.isSelectedAM = false
+                                    selection.isSelectedPM = false
+                                }
+                            }
+
                             daySelections.forEach { day ->
                                 when {
                                     !day.isSelectedDay && (day.isSelectedAM || day.isSelectedPM) -> {
@@ -509,7 +520,17 @@ fun ViewDetailsSelectedVolunteerScreen(
                             Log.d("SELECTED_INTENT", "DAY2 = ${day2Data?.dayLabel} | TIME=${day2Data?.time} | AM=${day2Data?.isAM} | PM=${day2Data?.isPM}")
                             Log.d("DEBUG_INTENT", "ScheduleID: $volunteerProfileScheduleID")
 
+                            if (selectedDayDataList.size > 1) {
+                                errorMessage = "⚠️ Please submit only one day and time at a time. You can return to send another request later."
+                                return@GradientButtonFullWidth
+                            }
+
                             if (!hasError) {
+                                day1Data?.dayLabel?.let { daySent ->
+                                    if (!alreadyRequestedDays.contains(daySent)) {
+                                        alreadyRequestedDays.add(daySent)
+                                    }
+                                }
                                 val intent = Intent(context, SendRequestSelectedAssistanceTask::class.java)
                                 intent.putExtra("taskId", selectedTaskID)
                                 intent.putExtra("volunteerId", volunteerID)
@@ -558,19 +579,31 @@ fun ViewDetailsSelectedVolunteerScreen(
         if (showMondayPicker) {
             CustomMondayPicker(
                 onDateSelected = { date ->
-                    val calendar = Calendar.getInstance().apply { time = date }
-                    if (calendar.before(Calendar.getInstance())) {
-                        errorMessage = "You cannot select a past date."
+                    val selectedCalendar = Calendar.getInstance().apply { time = date }
+                    val today = Calendar.getInstance()
+
+                    // Encontrar a segunda-feira desta semana (sem alterar a hora)
+                    val mondayThisWeek = Calendar.getInstance().apply {
+                        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+
+                    if (selectedCalendar.before(mondayThisWeek)) {
+                        errorMessage = "You can only select the current week or a future week."
                         selectedDate = ""
                     } else {
                         val formatted = "%02d/%02d/%02d".format(
-                            calendar.get(Calendar.DAY_OF_MONTH),
-                            calendar.get(Calendar.MONTH) + 1,
-                            calendar.get(Calendar.YEAR) % 100
+                            selectedCalendar.get(Calendar.DAY_OF_MONTH),
+                            selectedCalendar.get(Calendar.MONTH) + 1,
+                            selectedCalendar.get(Calendar.YEAR) % 100
                         )
                         selectedDate = formatted
                         errorMessage = null
                     }
+
                     showMondayPicker = false
                 },
                 onDismiss = { showMondayPicker = false }

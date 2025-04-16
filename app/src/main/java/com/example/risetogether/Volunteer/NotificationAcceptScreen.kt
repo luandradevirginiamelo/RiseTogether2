@@ -34,10 +34,10 @@ fun NotificationAcceptScreen(
     val day2 = requestData["Day2 Availability"] as? String?
     val preferredDay = if (!day1.isNullOrEmpty()) day1 else day2 ?: "N/A"
 
-    val timeRequested = requestData["Selected AM Day 1"]
-        ?: requestData["Selected PM Day 1"]
-        ?: requestData["Selected AM Day 2"]
-        ?: requestData["Selected PM Day 2"]
+    val timeRequested = requestData["Day 1 AM"] as? String?
+        ?: requestData["Day 1 PM"] as? String?
+        ?: requestData["Day 2 AM"] as? String?
+        ?: requestData["Day 2 PM"] as? String?
         ?: "N/A"
 
     val status = "Accepted"
@@ -118,6 +118,7 @@ fun NotificationAcceptScreen(
                 val assistTaskID = requestData["AssistTaskID"] as? String
                 val volunteerProfileID = requestData["VolunteerProfileID"] as? String
                 val volunteerCalendarProfileScheduleID = requestData["VolunteerCalendarProfileScheduleID"] as? String
+                val reminderMessage = "📅 Just a reminder! You have a task tomorrow: \"$taskName\" on $preferredDay at $timeRequested."
 
                 if (
                     patRequestFormID == null || assistTaskCatID == null || assistTaskID == null ||
@@ -137,7 +138,7 @@ fun NotificationAcceptScreen(
 
                 val notificDate = LocalDate.now().toString()
                 val notificTime = LocalTime.now().toString()
-                val reminderSendDate = LocalDate.now().minusDays(1).toString()
+                val reminderSendDate = LocalDate.now().toString()
 
                 val notificationData = hashMapOf(
                     "PatRequestFormID" to patRequestFormID,
@@ -164,7 +165,7 @@ fun NotificationAcceptScreen(
                     .addOnSuccessListener { notifRef ->
                         val notificationID = notifRef.id
 
-// 🔔 Buscar token do paciente correto e enviar push
+                        // 🔔 Buscar token do paciente correto e enviar push
                         db.collection("PatientinTreatment")
                             .document(patientId)
                             .get()
@@ -218,20 +219,58 @@ fun NotificationAcceptScreen(
                             "AssistTaskName" to taskName,
                             "RequestedDay" to preferredDay,
                             "RequestedTime" to timeRequested,
-                            "ReminderSendDate" to reminderSendDate
+                            "ReminderSendDate" to reminderSendDate,
+                            "ReminderSendTime" to "10:00",// ⏰ Scheduled for 10AM
+
+                            //  FOR TEST PROPOSES
+                            "isTestReminder" to true, // ✅ test
+                            "CustomSendTime" to LocalTime.now().plusMinutes(1).toString() // Ex: + 1 min
+
                         )
 
                         db.collection("AcceptedTaskRequestReminder")
                             .add(reminderData)
                             .addOnSuccessListener {
+                                android.os.Handler().postDelayed({
+                                    if (!patientFcmToken.isNullOrEmpty()) {
+                                        FcmV1Sender.sendNotification(
+                                            context = context,
+                                            fcmToken = patientFcmToken!!,
+                                            title = "Task Reminder",
+                                            body = reminderMessage
+                                        )
+                                    }
+                                }, 60000) // 60000ms = 1 minuto
+
                                 Toast.makeText(
                                     context,
-                                    "Notification for request acceptance successfully created & sent.",
+                                    "Notification for request acceptance and reminder created.",
                                     Toast.LENGTH_LONG
                                 ).show()
 
-                                onClose()            // Close popup
-                                onNotificationSent() // Go back to screen 2.2B
+
+                                // ✅ Salvar lembrete no painel do paciente
+                                db.collection("PatientinTreatment")
+                                    .document(patientId!!)
+                                    .collection("Notifications")
+                                    .add(
+                                        mapOf(
+                                            "text" to reminderMessage,
+                                            "date" to LocalDate.now().toString(),
+                                            "time" to LocalTime.now().toString()
+                                        )
+                                    )
+
+                                // ✅ Mostrar feedback na tela
+                                Toast.makeText(
+                                    context,
+                                    "Notification for request acceptance and reminder successfully created & sent.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                // ✅ Fechar popups/telas
+                                onClose()
+                                onNotificationSent()
                             }
                             .addOnFailureListener {
                                 Toast.makeText(context, "Failed to create reminder!", Toast.LENGTH_LONG).show()
