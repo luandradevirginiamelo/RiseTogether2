@@ -192,6 +192,10 @@ fun PatientLoginScreenContent() {
                                                             }
                                                                 .addOnSuccessListener {
                                                                     println("✅ Token OK!")
+                                                                    com.example.risetogether.notifications.DailyReminderScheduler.scheduleDailyReminder(context)
+
+                                                                    // ✅ Ir pro Dashboard
+                                                                    context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                                                                 }
                                                                 .addOnFailureListener { e ->
                                                                     println("⚠️ Error Token: ${e.message}")
