@@ -8,16 +8,19 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.R
@@ -54,7 +57,37 @@ fun ViewPatientRequestsContent() {
     var selectedRequestId by remember { mutableStateOf<String?>(null) }
 
 
-
+    @Composable
+    fun SmallGradientButton(text: String, onClick: () -> Unit) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .height(76.dp)
+                .width(105.dp)
+                .padding(end = 8.dp),
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784))
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = text,
+                    fontSize = 14.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
     // Load weeks
     LaunchedEffect(volunteerId) {
         db.collection("CancerPatientRequestFormRequiredAssistTask")
@@ -128,20 +161,18 @@ fun ViewPatientRequestsContent() {
                                     .clip(MaterialTheme.shapes.small)
                             )
                             Spacer(modifier = Modifier.weight(1f))
-                            Button(onClick = {
+                            SmallGradientButton("Logout") {
                                 auth.signOut()
-
                                 val intent = Intent(context, VolunteerLoginScreen::class.java).apply {
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
-
                                 context.startActivity(intent)
-                            }) {
-                                Text("Logout")
                             }
                         }
                     }
                 )
+
+
                 // ✅ INSIRA AQUI O POP-UP DENTRO DO BOX!
                 if (showPopup && selectedRequestId != null) {
                     ViewPatientRequestPopup(
@@ -164,7 +195,7 @@ fun ViewPatientRequestsContent() {
             }
 
         ) { padding ->
-            Column(
+                Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
@@ -174,16 +205,29 @@ fun ViewPatientRequestsContent() {
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Text("View List of Patient’s Requests for Assistance", fontSize = 20.sp, color = Color.Black)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(8.dp, RoundedCornerShape(12.dp))
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .padding(16.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                 "View List of Patient’s Requests for Assistance",
+                                  fontSize = 20.sp,
+                                  fontWeight = FontWeight.Bold,
+                                  color = Color(0xFF2E7D32) // Verde escuro do voluntário
+                            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Select Week Commence Date:", fontSize = 16.sp, color = Color.Black)
+                          Text("Select Week Commence Date:", fontSize = 16.sp, color = Color.Black)
 
-                ExposedDropdownMenuBox(
-                    expanded = weekExpanded,
-                    onExpandedChange = { weekExpanded = !weekExpanded }
-                ) {
+                          ExposedDropdownMenuBox(
+                          expanded = weekExpanded,
+                          onExpandedChange = { weekExpanded = !weekExpanded }
+                          ) {
                     OutlinedTextField(
                         value = selectedWeek,
                         onValueChange = {},
@@ -211,22 +255,37 @@ fun ViewPatientRequestsContent() {
                     }
                 }
 
+                        }
+                    }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White, MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp))
                         .padding(16.dp)
                 ) {
+                    Text(
+                        text = "📌 Notifications",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF33691E)
+                    )
                     Text("Task Name: ${latestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Date: ${latestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Time:  ${latestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
-                    Button(onClick = {
-                        selectedRequestId = latestRequest?.get("requestId")
-                        showPopup = true
-                    }) {
+                    Button(
+                        onClick = {
+                            selectedRequestId = latestRequest?.get("requestId")
+                            showPopup = true
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        )
+                    ) {
                         Text("View")
                     }
                 }
@@ -236,37 +295,45 @@ fun ViewPatientRequestsContent() {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White, MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp))
                         .padding(16.dp)
                 ) {
+                    Text(
+                        text = "📌 Notifications",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0D47A1)
+                    )
                     Text("Task Name: ${earliestRequest?.get("name") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Date: ${earliestRequest?.get("date") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Text("Notification Time: ${earliestRequest?.get("time") ?: "N/A"}", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
-                    Button(onClick = {
-                        selectedRequestId = earliestRequest?.get("requestId")
-                        showPopup = true
-                    }) {
+                    Button(
+                        onClick = {
+                            selectedRequestId = earliestRequest?.get("requestId")
+                            showPopup = true
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        )
+                    ) {
                         Text("View")
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(onClick = {
+                GradientButton(text = "Select Another Week Commence Date") {
                     selectedWeek = ""
                     latestRequest = null
                     earliestRequest = null
-                }) {
-                    Text("Select Another Week Commence Date")
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Button(onClick = {
+                GradientButton(text = "Back to Dashboard") {
                     context.startActivity(Intent(context, VolunteerDashboardScreen::class.java))
-                }) {
-                    Text("Back to Dashboard")
                 }
             }
         }
@@ -432,5 +499,34 @@ fun ViewPatientRequestPopup(
             }
         )
     }
+}
 
+
+    @Composable
+    fun GradientButton(text: String, onClick: () -> Unit) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784))
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = text, fontWeight = FontWeight.Bold, color = Color.Black)
+            }
+
+
+
+    }
 }

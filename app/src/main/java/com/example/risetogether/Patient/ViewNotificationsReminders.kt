@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
-import com.example.risetogether.VolunteerLoginScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -57,6 +56,34 @@ fun ViewNotificationsRemindersContent() {
     var showPopup by remember { mutableStateOf(false) }
     var selectedRequestId by remember { mutableStateOf<String?>(null) }
     var patCancerType by remember { mutableStateOf("") }
+
+    @Composable
+    fun Funbutton(text: String, onClick: () -> Unit) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5))
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = text, fontWeight = FontWeight.Bold, color = Color.Black)
+            }
+
+        }
+
+    }
 
     LaunchedEffect(volunteerId) {
         val patientId = auth.currentUser?.uid ?: ""
@@ -239,7 +266,7 @@ fun ViewNotificationsRemindersContent() {
                                     .padding(16.dp)
                             ) {
                                 Text(
-                                    text = "📌 Latest Notification",
+                                    text = "📌 Notifications",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF33691E)
@@ -272,7 +299,7 @@ fun ViewNotificationsRemindersContent() {
                                     .padding(16.dp)
                             ) {
                                 Text(
-                                    text = "⏳ Earliest Notification",
+                                    text = "📌 Notifications",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF0D47A1)
@@ -297,29 +324,21 @@ fun ViewNotificationsRemindersContent() {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    PatientButton(
-                        text = "Select Another Week Commence Date",
-                        onClick = {
-                            selectedWeek = ""
-                            latestRequest = null
-                            earliestRequest = null
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                    )
+                    Funbutton(text = "Select Another Week Commence Date") {
+                        selectedWeek = ""
+                        latestRequest = null
+                        earliestRequest = null
+                    }
 
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    PatientButton(
-                        text = "Back to Dashboard",
-                        onClick = {
-                            context.startActivity(Intent(context, PatientDashboardScreen::class.java))
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Funbutton(text = "Back to Dashboard") {
+                        context.startActivity(Intent(context, PatientDashboardScreen::class.java))
+                    }
+
+
                 }
 
                 // ✅ Chamada correta do popup, FORA do Scaffold
@@ -398,5 +417,10 @@ fun ViewNotificationsRemindersContent() {
                     onClose = onDismiss
                 )
             }
-        }
+
     }
+
+        }
+
+
+

@@ -81,6 +81,7 @@ fun VolunteerProfileScreenContent() {
     // 🔥 Estado para mensagem de erro
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isSaveEnabled by remember { mutableStateOf(true) }
+    var isSaveButtonVisible by remember { mutableStateOf(true) }
 
     // 🔥 Variável para armazenar o ID do perfil do voluntário criado no Firestore
     var volunteerProfileID by remember { mutableStateOf("") }
@@ -101,7 +102,7 @@ fun VolunteerProfileScreenContent() {
                     .fillMaxSize()
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784)) // 🔥 Azul Claro → Azul Médio
+                            colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784))
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ),
@@ -471,7 +472,8 @@ fun VolunteerProfileScreenContent() {
                             onFailure(exception)
                         }
                 }
-                GradientButton(text = if (isSaving) "Saving..." else "Save") {
+                if (isSaveButtonVisible) {
+                    GradientButton(text = if (isSaving) "Saving..." else "Save") {
                     val userId = auth.currentUser?.uid ?: return@GradientButton
 
                     if (selectedCategory.isBlank()) {
@@ -523,7 +525,7 @@ fun VolunteerProfileScreenContent() {
                                             errorMessage = null
                                             showSuccessDialog = true
                                             volunteerProfileID = newVolunteerProfileID // 🔥 Salva o ID para passar pra próxima tela!
-
+                                            isSaveButtonVisible = false
                                             Log.d("Firestore", "✅ Volunteer Profile saved: $newVolunteerProfileID")
                                         }
                                         .addOnFailureListener {
@@ -537,6 +539,8 @@ fun VolunteerProfileScreenContent() {
                             errorMessage = "Failed to upload image: ${exception.message}"
                         }
                     )
+                }
+
                 }
 
 
@@ -597,7 +601,9 @@ fun VolunteerProfileScreenContent() {
                     selectedDays = "" // 🔥 Reset days selection
                     daysExpanded = false
 
-                    imageUri = null // 🔥 Faz o botão reaparecer
+                    imageUri = null // 🔥
+
+                    isSaveButtonVisible = true
 
                     refreshTrigger++ // 🔥 Forces the app to reload fresh data next time!
                 }
