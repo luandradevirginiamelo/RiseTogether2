@@ -21,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.ui.text.style.TextAlign // ✅ IMPORTED TO FIX ERROR
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 
@@ -88,41 +89,42 @@ fun CreateProfileCalendarSchedule() {
         }
     }
 
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        tonalElevation = 4.dp
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF81C784), Color(0xFFFFF8E1)) // Verde → Bege
+                )
+            )
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // HEADER
+            // Cabeçalho
+            Text(
+                "Schedule Assistance Task",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 🧊 Container branco com sombra
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(listOf(Color(0xFFB3E5FC), Green)),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(12.dp)
+                    .shadow(6.dp, RoundedCornerShape(16.dp))
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Schedule Assistance Task",
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column {
                     Text("Assistance Task Name: $selectedTaskName", fontSize = 16.sp)
                     Text("Category: $selectedTaskCategory", fontSize = 16.sp)
                 }
@@ -137,10 +139,13 @@ fun CreateProfileCalendarSchedule() {
             var selectedAMTime by remember { mutableStateOf("") }
             var selectedPMTime by remember { mutableStateOf("") }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(16.dp))
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(16.dp)
+                    .padding(bottom = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Day $dayNumber of the Week Availability:", fontWeight = FontWeight.Bold)
@@ -219,7 +224,7 @@ fun CreateProfileCalendarSchedule() {
                         scheduleData["Day $dayNumber AM"] = triple.second?.takeIf { it.isNotBlank() } ?: null
                         scheduleData["Day $dayNumber PM"] = triple.third?.takeIf { it.isNotBlank() } ?: null
                     }
-
+                    isSaving = true
                     db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
                         .add(scheduleData)
                         .addOnSuccessListener { documentReference ->
@@ -242,54 +247,45 @@ fun CreateProfileCalendarSchedule() {
                         }
 
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isSaving
+                modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                enabled = !isSaving,
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Text(if (isSaving) "Saving..." else "Save Schedule")
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784))
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (isSaving) "Saving..." else "Save Schedule",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (isSaved) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .background(Color(0xFFE8F5E9), shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "🎉 Schedule successfully saved!\n\nYou may create another task or go back to dashboard.",
-                    color = Color(0xFF2E7D32),
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                Button(onClick = { (context as? ComponentActivity)?.finish() }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close")
+            AlertDialog(
+                onDismissRequest = { isSaved = false },
+                title = { Text("✅ Success") },
+                text = { Text("Schedule successfully saved!") },
+                confirmButton = {
+                    Button(onClick = { (context as? ComponentActivity)?.finish() }) {
+                        Text("✖ Close")
+                    }
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(
-                    onClick = { context.startActivity(Intent(context, VolunteerProfileScreen::class.java)) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Another Assistance Task")
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(
-                    onClick = { context.startActivity(Intent(context, VolunteerDashboardScreen::class.java)) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Back to Dashboard")
-                }
-            }
+            )
         }
     }
 }
