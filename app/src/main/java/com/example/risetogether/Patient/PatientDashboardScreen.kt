@@ -24,7 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
-import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuth
+
 
 
 class PatientDashboardScreen : ComponentActivity() {
@@ -110,9 +111,12 @@ fun PatientDashboardScreenContent() {
                         SmallGradientButton(
                             text = "Logout",
                             onClick = {
-                                coroutineScope.launch {
-                                    context.startActivity(Intent(context, PatientLoginScreen::class.java))
+                                FirebaseAuth.getInstance().signOut()
+
+                                val intent = Intent(context, PatientLoginScreen::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
+                                context.startActivity(intent)
                             }
                         )
                     }, // 🔥 Closed 'actions' properly

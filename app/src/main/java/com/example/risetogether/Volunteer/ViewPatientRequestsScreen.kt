@@ -130,7 +130,12 @@ fun ViewPatientRequestsContent() {
                             Spacer(modifier = Modifier.weight(1f))
                             Button(onClick = {
                                 auth.signOut()
-                                context.startActivity(Intent(context, VolunteerLoginScreen::class.java))
+
+                                val intent = Intent(context, VolunteerLoginScreen::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                }
+
+                                context.startActivity(intent)
                             }) {
                                 Text("Logout")
                             }

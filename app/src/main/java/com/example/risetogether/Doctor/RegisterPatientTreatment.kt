@@ -85,11 +85,16 @@ fun RegisterPatientTreatmentContent(onLogout: () -> Unit = {}) {
                         LogoutButton(
                             text = "Logout",
                             onClick = {
-                                coroutineScope.launch {
-                                    context.startActivity(Intent(context, DoctorLoginScreen::class.java))
+                                FirebaseAuth.getInstance().signOut()
+
+                                val intent = Intent(context, DoctorLoginScreen::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
+
+                                context.startActivity(intent)
                             }
                         )
+
                     }, // 🔥 Closed 'actions' properly
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
 

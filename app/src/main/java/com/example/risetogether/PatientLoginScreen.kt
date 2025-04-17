@@ -162,58 +162,58 @@ fun PatientLoginScreenContent() {
                     isLoading = true
                     errorMessage = null
 
+                    // 🔒 Validate input
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Please fill in both email and password."
+                        isLoading = false
+                        return@PatientButton
+                    }
+
                     auth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
                                 // 🔥 Fetch the Patient record from Firestore
-                                // 🔥 Fetch the Patient record from Firestore
                                 db.collection("PatientinTreatment").document(userId).get()
                                     .addOnSuccessListener { document ->
-                                        isLoading = false
                                         if (document.exists()) {
                                             val role = document.getString("role") ?: "Unknown"
 
-                                            if (role.lowercase() == "patient") {  // ✅ Ensure it's "Patient"
+                                            if (role.lowercase() == "patient") {
                                                 // 🔥 Obter token FCM
                                                 FirebaseMessaging.getInstance().token
                                                     .addOnCompleteListener { tokenTask ->
                                                         if (tokenTask.isSuccessful) {
                                                             val fcmToken = tokenTask.result
-                                                            println("✅ FCM Token: $fcmToken")
 
-                                                            // 🔥 Salvar token no Firestore
-                                                            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-                                                                val userId = FirebaseAuth.getInstance().currentUser?.uid
-                                                                FirebaseFirestore.getInstance().collection("PatientinTreatment")
-                                                                    .document(userId ?: "")
-                                                                    .update("fcmToken", token)
-                                                            }
+                                                            FirebaseFirestore.getInstance()
+                                                                .collection("PatientinTreatment")
+                                                                .document(userId)
+                                                                .update("fcmToken", fcmToken)
                                                                 .addOnSuccessListener {
-                                                                    println("✅ Token OK!")
+                                                                    isLoading = false
                                                                     com.example.risetogether.notifications.DailyReminderScheduler.scheduleDailyReminder(context)
 
                                                                     // ✅ Ir pro Dashboard
                                                                     context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                                                                 }
                                                                 .addOnFailureListener { e ->
-                                                                    println("⚠️ Error Token: ${e.message}")
+                                                                    isLoading = false
+                                                                    errorMessage = "⚠️ Error saving FCM token: ${e.message}"
                                                                 }
                                                         } else {
-                                                            println("⚠️ Error to catch a token FCM: ${tokenTask.exception?.message}")
+                                                            isLoading = false
+                                                            errorMessage = "⚠️ Failed to get FCM token: ${tokenTask.exception?.message}"
                                                         }
                                                     }
-
-                                                // 🔄 Vai pra tela do Dashboard
-                                                context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                                             } else {
-                                                // 🔒 Usuário autenticado, mas não é paciente
+                                                isLoading = false
                                                 errorMessage = "❌ Access Denied: Not authorized as a Patient."
                                                 auth.signOut()
                                             }
                                         } else {
-                                            // 🔥 Documento não encontrado no Firestore
+                                            isLoading = false
                                             errorMessage = "❌ No Patient record found. Please contact support."
                                         }
                                     }
@@ -221,10 +221,12 @@ fun PatientLoginScreenContent() {
                                         isLoading = false
                                         errorMessage = "🔥 Firestore Error: ${e.message}"
                                     }
-
+                            } else {
+                                isLoading = false
+                                errorMessage = task.exception?.localizedMessage ?: "❌ Login failed. Please try again."
+                            }
+                        }
                 }
-            }
-        }
 
 
 

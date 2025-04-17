@@ -178,7 +178,7 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                                     volunteerProfileScheduleID = scheduleDoc.getString("VolunteerCalendarProfileScheduleID") ?: ""
 
-                                 availabilityList.clear()
+                                    availabilityList.clear()
 
                                     for (i in 1..2) {
                                         val dayKey = "Day${i} Availability"
@@ -496,7 +496,12 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                             // 🔥 Mapeia seleção + disponibilidade corretamente
                             val selectedDayDataList = availabilityList.zip(daySelections)
-                                .filter { it.second.isSelectedDay && (it.second.isSelectedAM || it.second.isSelectedPM) }
+                                .filter { selectionPair ->
+                                    val (availability, selection) = selectionPair
+                                    val isSelected = selection.isSelectedDay && (selection.isSelectedAM || selection.isSelectedPM)
+                                    val isNotAlreadySent = !alreadyRequestedDays.contains(availability.dayLabel)
+                                    isSelected && isNotAlreadySent
+                                }
                                 .map { (availability, selection) ->
                                     val selectedTime = when {
                                         selection.isSelectedAM -> availability.amTime
@@ -526,6 +531,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                             }
 
                             if (!hasError) {
+                                alreadyRequestedDays.add(day1Data?.dayLabel ?: "")
                                 day1Data?.dayLabel?.let { daySent ->
                                     if (!alreadyRequestedDays.contains(daySent)) {
                                         alreadyRequestedDays.add(daySent)
