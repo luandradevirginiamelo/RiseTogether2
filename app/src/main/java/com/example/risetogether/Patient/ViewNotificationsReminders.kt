@@ -144,12 +144,16 @@ fun ViewNotificationsRemindersContent() {
                                     .clip(RoundedCornerShape(12.dp))
                             )
                             Spacer(modifier = Modifier.weight(1f))
-                            // ✅ Botão Logout padrão
                             SmallGradientButton(
                                 text = "Logout",
                                 onClick = {
-                                    auth.signOut()
-                                    context.startActivity(Intent(context, PatientLoginScreen::class.java))
+                                    FirebaseAuth.getInstance().signOut()
+
+                                    val intent = Intent(context, PatientLoginScreen::class.java).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    }
+
+                                    context.startActivity(intent)
                                 }
                             )
                         }

@@ -32,10 +32,11 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.example.risetogether.VolunteerLoginScreen
+import androidx.compose.ui.input.key.Key.Companion.Home
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 import coil.compose.rememberAsyncImagePainter
+import com.example.risetogether.VolunteerLoginScreen
 
 class VolunteerProfileScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -218,7 +219,10 @@ fun VolunteerProfileScreenContent() {
                                 text = "Logout",
                                 onClick = {
                                     auth.signOut()
-                                    context.startActivity(Intent(context, VolunteerLoginScreen::class.java))
+
+                                    val intent = Intent(context, VolunteerLoginScreen::class.java)
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    context.startActivity(intent)
                                 }
                             )
                         }
