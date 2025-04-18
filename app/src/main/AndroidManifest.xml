@@ -66,6 +66,8 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.Risetogether"/>
 
+        <activity android:name=".Patient.ProvideFeedbackRatingsDetailScreen" />
+
         <!-- Patient Login Screen -->
         <activity
             android:name=".PatientLoginScreen"
