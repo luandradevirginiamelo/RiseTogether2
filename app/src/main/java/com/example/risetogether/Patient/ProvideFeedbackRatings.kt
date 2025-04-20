@@ -28,6 +28,9 @@ import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class ProvideFeedbackRatingsScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,17 +60,28 @@ fun ProvideFeedbackRatingsContent() {
     LaunchedEffect(patientId) {
         db.collection("NotificationOfPatientRequest")
             .whereEqualTo("PatID", patientId)
-            .whereEqualTo("RequestStatus", "Accepted") // use "RequestStatus" igual no Firestore
+            .whereEqualTo("RequestStatus", "Accepted")
             .get()
             .addOnSuccessListener { snapshot ->
-                val weeks = snapshot.documents
-                    .mapNotNull { it.getString("WeekCommenceDate") }
-                    .distinct()
+                val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+                val today = Calendar.getInstance().time
 
-                availableWeeks = weeks.sorted() // ou ordene como quiser
+                val pastWeeks = snapshot.documents
+                    .mapNotNull { it.getString("WeekCommenceDate") }
+                    .filter { weekStr ->
+                        try {
+                            val weekDate = sdf.parse(weekStr)
+                            weekDate != null && weekDate.before(today)
+                        } catch (e: Exception) {
+                            false
+                        }
+                    }
+                    .distinct()
+                    .sorted()
+
+                availableWeeks = pastWeeks
             }
     }
-
     fun fetchAcceptedTasksForWeek(week: String) {
         db.collection("NotificationOfPatientRequest")
             .whereEqualTo("PatID", patientId)

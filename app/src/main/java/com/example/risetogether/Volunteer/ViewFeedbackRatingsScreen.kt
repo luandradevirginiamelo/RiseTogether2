@@ -72,13 +72,23 @@ fun ViewFeedbackRatingsContent() {
             .whereEqualTo("VolunteerID", volunteerId)
             .get()
             .addOnSuccessListener { snapshot ->
+                val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault()) // ajuste conforme formato do seu Firestore
+                val today = Calendar.getInstance().time
+
                 val weeks = snapshot.documents.mapNotNull {
                     it.getString("WeekCommenceDate")
-                }.distinct()
-                availableWeeks = weeks.sorted()
+                }.filter { weekStr ->
+                    try {
+                        val weekDate = sdf.parse(weekStr)
+                        weekDate != null && weekDate.before(today)
+                    } catch (e: Exception) {
+                        false
+                    }
+                }.distinct().sorted()
+
+                availableWeeks = weeks
             }
     }
-
     // Buscar feedbacks da semana selecionada
     fun fetchFeedbacksForWeek(week: String) {
         db.collection("FeedbackRatings")
