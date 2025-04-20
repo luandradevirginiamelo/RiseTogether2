@@ -200,7 +200,7 @@ fun VolunteerDashboardScreenContent() {
                                 .fillMaxWidth()
                                 .padding(2.dp) // ✅ Agora Modifier funciona corretamente
                         ) {
-                            context.startActivity(Intent(context, FeedbackRatingsScreen::class.java))
+                            context.startActivity(Intent(context, ViewFeedbackRatingsScreen::class.java))
                         }
 
 

@@ -193,7 +193,7 @@ fun PatientLoginScreenContent() {
                                                                 .update("fcmToken", fcmToken)
                                                                 .addOnSuccessListener {
                                                                     isLoading = false
-                                                                    com.example.risetogether.notifications.DailyReminderScheduler.scheduleDailyReminder(context)
+                                                                    //com.example.risetogether.notifications.DailyReminderScheduler.scheduleDailyReminder(context)
 
                                                                     // ✅ Ir pro Dashboard
                                                                     context.startActivity(Intent(context, PatientDashboardScreen::class.java))
