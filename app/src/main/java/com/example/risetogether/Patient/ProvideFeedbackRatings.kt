@@ -179,7 +179,7 @@ fun ProvideFeedbackRatingsContent() {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Text("Select Week Commence Date:", fontWeight = FontWeight.SemiBold)
+                        Text("Week Commencing Date:", fontWeight = FontWeight.SemiBold)
 
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -201,7 +201,6 @@ fun ProvideFeedbackRatingsContent() {
                                 expanded = weekExpanded,
                                 onDismissRequest = { weekExpanded = false }
                             ) {
-                                Text("Obtained Assistance: ${acceptedTasks.size}", color = Color.Black)
 
                                 availableWeeks.forEach { week ->
                                     DropdownMenuItem(
@@ -217,7 +216,7 @@ fun ProvideFeedbackRatingsContent() {
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
-                        Text("Tasks carregadas: ${acceptedTasks.size}", color = Color.Red)
+                        Text("Tasks performed for the selected week: ${acceptedTasks.size}", color = Color.Black)
 
                         // Tasks List
                         acceptedTasks.forEach { task ->
@@ -228,7 +227,7 @@ fun ProvideFeedbackRatingsContent() {
                                     .padding(16.dp)
                                     .padding(bottom = 12.dp)
                             ) {
-                                Text("Task Name: ${task["name"]}")
+                                Text(" \uD83D\uDCCC Task Name: ${task["name"]}")
                                 Text("Day of Week Requested: ${task["day"]}")
                                 Text("Time Requested: ${task["time"]}")
 
@@ -253,7 +252,7 @@ fun ProvideFeedbackRatingsContent() {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                GradientButton("Select Another Week Commence Date") {
+                GradientButton("Select Another Week Commencing Date") {
                     selectedWeek = ""
                     acceptedTasks = emptyList()
                 }

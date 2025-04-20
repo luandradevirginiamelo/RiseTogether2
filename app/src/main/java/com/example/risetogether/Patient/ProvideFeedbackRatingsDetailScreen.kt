@@ -121,7 +121,7 @@ fun ProvideFeedbackRatingsDetailContent(requestId: String) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Provide Feedback Text", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Provide Feedback and Ratings for Obteined Assistance with Selected Task", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             )
         }
@@ -168,7 +168,7 @@ fun ProvideFeedbackRatingsDetailContent(requestId: String) {
             OutlinedTextField(
                 value = feedbackText,
                 onValueChange = { feedbackText = it },
-                label = { Text("Provide Feedback and Ratings for Obteined Assistance with Selected Task ") },
+                label = { Text("Provide Feedback Text") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)

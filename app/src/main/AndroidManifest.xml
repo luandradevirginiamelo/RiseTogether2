@@ -182,7 +182,7 @@
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
 
-        <activity android:name=".Volunteer.FeedbackRatingsScreen"
+        <activity android:name=".Volunteer.ViewFeedbackRatingsScreen"
             android:exported="true"
             android:label="Doctor Dashboard"
             android:theme="@style/Theme.Risetogether"/>
