@@ -72,7 +72,7 @@ fun PatientLoginScreenContent() {
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        // 🔹 Logo com fundo branco e sombra
+        // 🔹 Logo
         Box(
             modifier = Modifier
                 .shadow(12.dp, RoundedCornerShape(12.dp))
@@ -181,7 +181,7 @@ fun PatientLoginScreenContent() {
                                             val role = document.getString("role") ?: "Unknown"
 
                                             if (role.lowercase() == "patient") {
-                                                // 🔥 Obter token FCM
+                                                // 🔥  token FCM
                                                 FirebaseMessaging.getInstance().token
                                                     .addOnCompleteListener { tokenTask ->
                                                         if (tokenTask.isSuccessful) {
@@ -195,7 +195,7 @@ fun PatientLoginScreenContent() {
                                                                     isLoading = false
                                                                     //com.example.risetogether.notifications.DailyReminderScheduler.scheduleDailyReminder(context)
 
-                                                                    // ✅ Ir pro Dashboard
+                                                                    // ✅ Dashboard
                                                                     context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                                                                 }
                                                                 .addOnFailureListener { e ->

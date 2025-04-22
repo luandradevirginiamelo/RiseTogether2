@@ -50,8 +50,8 @@ fun VolunteerDashboardScreenContent() {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF90CAF9), // Azul bebê → Mantém a confiança, mas com um tom mais suave
-                        Color(0xFF81C784), // Verde menta → Mais leve, simboliza esperança e renovação
+                        Color(0xFF90CAF9),
+                        Color(0xFF81C784),
                         Color(0xFFFFF8E1)
                     )
                 )

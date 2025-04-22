@@ -31,7 +31,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Switch para alternar entre modo claro e escuro
+            // Switch to change for Dark mode
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
