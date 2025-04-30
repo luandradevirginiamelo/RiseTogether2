@@ -216,12 +216,12 @@ fun DoctorDashboardScreenContent() {
 @Composable
 fun DoctorButton(
     text: String,
-    modifier: Modifier = Modifier, // 🔥 Agora aceita Modifier
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier // 🔥 Passa o Modifier corretamente
+        modifier = modifier
             .fillMaxWidth()
             .height(112.dp)
             .padding(vertical = 2.dp),
