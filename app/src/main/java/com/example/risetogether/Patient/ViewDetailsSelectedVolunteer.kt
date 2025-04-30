@@ -6,11 +6,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.DatePicker
@@ -18,6 +21,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 import java.util.Date
@@ -129,6 +134,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showMondayPicker by remember { mutableStateOf(false) }
     var volunteerProfileScheduleID by remember { mutableStateOf("") }
+    var profileImageUrl by remember { mutableStateOf<String?>(null) }
 
 
     val daySelections = remember {
@@ -159,6 +165,18 @@ fun ViewDetailsSelectedVolunteerScreen(
                         mobile = document.getString("VolunMobile") ?: "Not Available"
                         gender = document.getString("VolunGender") ?: "Not Available"
                         voluncancertype = document.getString("VolunCancerType") ?: "Not Available"
+
+                        db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory")
+                            .document(volunteerProfileID)
+                            .get()
+                            .addOnSuccessListener { doc ->
+                                val url = doc.getString("VolunteerProfilePic")
+                                Log.d("IMAGE_DEBUG", "URL Image: $url")
+                                profileImageUrl = url
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("IMAGE_DEBUG", "Error to find image: ${e.message}")
+                            }
 
                         db.collection("AssistanceTaskwithinCategory")
                             .whereEqualTo("AssistTaskID", selectedTaskID)
@@ -245,7 +263,41 @@ fun ViewDetailsSelectedVolunteerScreen(
                     )
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(Modifier.height(16.dp))
+
+                    profileImageUrl?.let { imageUrl ->
+                        Log.d("IMAGE_RENDER", "Trying to render image with URL: $imageUrl")
+
+                        if (imageUrl.isNotBlank()) {
+                            Card(
+                                shape = CircleShape,
+                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                modifier = Modifier.size(160.dp)
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(model = imageUrl),
+                                    contentDescription = "Volunteer Profile Picture",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .border(
+                                            width = 3.dp,
+                                            color = MaterialTheme.colorScheme.primary, // More modern than black
+                                            shape = CircleShape
+                                        )
+                                )
+                            }
+                        } else {
+                            Log.e("IMAGE_RENDER", "Image URL is blank or invalid")
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                }
 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -264,7 +316,6 @@ fun ViewDetailsSelectedVolunteerScreen(
                             }
                         }
                     }
-
                     item {
                         Text("Volunteers' Availability by Day of the Week", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
