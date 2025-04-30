@@ -70,7 +70,7 @@ fun GradientButtonFullWidth(
     }
 }
 
-// 🔹 Cor padrão do app
+
 val BlueMedium = Color(0xFF007AFF)
 
 data class VolunteerDayAvailability(
@@ -279,7 +279,7 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
 
-                            // 🔴 Mensagem de erro (caso exista)
+
                             if (!selection.error.isNullOrEmpty()) {
                                 Text(
                                     text = selection.error ?: "",
@@ -299,7 +299,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
 
-                                    // DIA + BOTÃO SELECT
+
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.fillMaxWidth()
@@ -343,7 +343,7 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                                     Spacer(Modifier.height(8.dp))
 
-                                    // AM TIME + SELECT (se tiver valor)
+                                    // AM TIME + SELECT
                                     if (item.amTime.isNotEmpty()) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -385,7 +385,7 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                                     Spacer(Modifier.height(8.dp))
 
-                                    // PM TIME + SELECT (se tiver valor)
+                                    // PM TIME + SELECT
                                     if (item.pmTime.isNotEmpty()) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
@@ -464,7 +464,7 @@ fun ViewDetailsSelectedVolunteerScreen(
 
                             var hasError = false
 
-                            // 🔄 Reset all previously selected days that were already sent
+                            //  Reset all previously selected days that were already sent
                             daySelections.forEachIndexed { index, selection ->
                                 if (alreadyRequestedDays.contains(selection.dayLabel)) {
                                     selection.isSelectedDay = false
@@ -494,7 +494,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                                 errorMessage = null
                             }
 
-                            // 🔥 Mapeia seleção + disponibilidade corretamente
+
                             val selectedDayDataList = availabilityList.zip(daySelections)
                                 .filter { selectionPair ->
                                     val (availability, selection) = selectionPair
@@ -520,7 +520,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                             val day1Data = selectedDayDataList.getOrNull(0)
                             val day2Data = selectedDayDataList.getOrNull(1)
 
-                            // ✅ Logs pra garantir
+
                             Log.d("SELECTED_INTENT", "DAY1 = ${day1Data?.dayLabel} | TIME=${day1Data?.time} | AM=${day1Data?.isAM} | PM=${day1Data?.isPM}")
                             Log.d("SELECTED_INTENT", "DAY2 = ${day2Data?.dayLabel} | TIME=${day2Data?.time} | AM=${day2Data?.isAM} | PM=${day2Data?.isPM}")
                             Log.d("DEBUG_INTENT", "ScheduleID: $volunteerProfileScheduleID")
@@ -588,7 +588,7 @@ fun ViewDetailsSelectedVolunteerScreen(
                     val selectedCalendar = Calendar.getInstance().apply { time = date }
                     val today = Calendar.getInstance()
 
-                    // Encontrar a segunda-feira desta semana (sem alterar a hora)
+
                     val mondayThisWeek = Calendar.getInstance().apply {
                         set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
                         set(Calendar.HOUR_OF_DAY, 0)
@@ -618,7 +618,7 @@ fun ViewDetailsSelectedVolunteerScreen(
     }
 }
 
-// 🔹 Modal calendar picker - only Mondays
+// Modal calendar picker - only Mondays
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomMondayPicker(

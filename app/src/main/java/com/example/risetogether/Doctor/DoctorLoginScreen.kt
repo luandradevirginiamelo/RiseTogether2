@@ -88,12 +88,12 @@ fun DoctorLoginScreenContent() {
 
         Text(
             text = "Doctor Login",
-            style = MaterialTheme.typography.headlineLarge, // Usa estilo de título do Material 3
-            color = MaterialTheme.colorScheme.primary, // Usa a cor primária do tema
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
-                .padding(vertical = 16.dp) // Espaçamento para melhor layout
+                .padding(vertical = 16.dp)
                 .fillMaxWidth(),
-            textAlign = TextAlign.Center // Centraliza o texto
+            textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(10.dp))

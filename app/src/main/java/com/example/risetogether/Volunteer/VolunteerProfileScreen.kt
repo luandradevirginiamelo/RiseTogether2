@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.risetogether.PatientLoginScreen
 import com.example.risetogether.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,7 +31,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.input.key.Key.Companion.Home
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
 import coil.compose.rememberAsyncImagePainter
@@ -83,7 +81,7 @@ fun VolunteerProfileScreenContent() {
     var isSaveEnabled by remember { mutableStateOf(true) }
     var isSaveButtonVisible by remember { mutableStateOf(true) }
 
-    // 🔥 Variável para armazenar o ID do perfil do voluntário criado no Firestore
+
     var volunteerProfileID by remember { mutableStateOf("") }
 
     @Composable
@@ -91,9 +89,9 @@ fun VolunteerProfileScreenContent() {
         Button(
             onClick = onClick,
             modifier = Modifier
-                .height(76.dp) // 🔹 Mantém o botão pequeno como no Dashboard
-                .width(105.dp) // 🔹 Largura específica do Dashboard
-                .padding(end = 8.dp), // 🔹 Adiciona espaçamento para alinhar corretamente
+                .height(76.dp)
+                .width(105.dp)
+                .padding(end = 8.dp),
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
         ) {
@@ -110,7 +108,7 @@ fun VolunteerProfileScreenContent() {
             ) {
                 Text(
                     text = text,
-                    fontSize = 14.sp, // 🔹 Mesmo tamanho de texto do Dashboard
+                    fontSize = 14.sp,
                     color = Color.Black,
                     fontWeight = FontWeight.Bold
                 )
@@ -118,7 +116,7 @@ fun VolunteerProfileScreenContent() {
         }
     }
 
-    // 🔥 Esconde a mensagem de erro após 3 segundos
+
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             kotlinx.coroutines.delay(3000)
@@ -179,8 +177,8 @@ fun VolunteerProfileScreenContent() {
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
                 taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
 
-                selectedTask = "" // 🔥 Keep empty until user clicks
-                selectedTaskID = "" // 🔥 Keep empty until user clicks
+                selectedTask = "" //  Keep empty until user clicks
+                selectedTaskID = "" //  Keep empty until user clicks
             }
             .addOnFailureListener { exception ->
                 println("❌ Error fetching tasks: ${exception.message}")
@@ -192,9 +190,9 @@ fun VolunteerProfileScreenContent() {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF90CAF9), // 🔹 Azul Claro
-                        Color(0xFF81C784), // 🔹 Azul Médio
-                        Color(0xFFFFF8E1)  // 🔹 Cinza
+                        Color(0xFF90CAF9),
+                        Color(0xFF81C784),
+                        Color(0xFFFFF8E1)
                     )
                 )
             )
@@ -242,7 +240,7 @@ fun VolunteerProfileScreenContent() {
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 🔥 CONTAINER BRANCO ENVOLVENDO O CONTEÚDO
+                // CONTAINEr
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -267,7 +265,7 @@ fun VolunteerProfileScreenContent() {
 
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        // 🔥 Dropdown 1: Assistance Task Category
+                        //  Dropdown 1: Assistance Task Category
                         Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = categoryExpanded,
@@ -298,7 +296,7 @@ fun VolunteerProfileScreenContent() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 🔥 Dropdown 2: Assistance Task within Selected Category
+
                         Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = taskExpanded,
@@ -330,7 +328,7 @@ fun VolunteerProfileScreenContent() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 🔥 Dropdown 3: Number of Days
+
                         Text("NO of Days/Week Availability for the Selected Assistance Task:", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = daysExpanded,
@@ -358,10 +356,10 @@ fun VolunteerProfileScreenContent() {
                                 }
                             }
                         }
-                    } // 🔹 FECHA O BOX AQUI!
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // 🔥 Exibir mensagem de erro no centro da tela
+
                     errorMessage?.let {
                         Text(
                             text = it,
@@ -406,14 +404,14 @@ fun VolunteerProfileScreenContent() {
                     }
                 }
 
-                // 🎯 Continua igual, sem mudar a lógica
+
                 val galleryLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.GetContent()
                 ) { uri: Uri? ->
-                    imageUri = uri // Armazena a URI da imagem selecionada
+                    imageUri = uri
                 }
 
-// ✅ Container branco que envolve o botão de upload ou a imagem
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -426,7 +424,7 @@ fun VolunteerProfileScreenContent() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (imageUri == null) {
-                            // ✅ Antes do upload – mostra texto + botão
+
                             Text(
                                 text = "Upload your recent photo:",
                                 fontSize = 16.sp,
@@ -435,14 +433,14 @@ fun VolunteerProfileScreenContent() {
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 4.dp) // Mais colado no botão
+                                    .padding(bottom = 4.dp)
                             )
 
                             GradientButton(text = "Open Phone Gallery") {
                                 galleryLauncher.launch("image/*")
                             }
                         } else {
-                            // ✅ Depois do upload – mostra imagem selecionada
+
                             Image(
                                 painter = rememberAsyncImagePainter(model = imageUri),
                                 contentDescription = "Selected Image",
@@ -456,16 +454,16 @@ fun VolunteerProfileScreenContent() {
                     }
                 }
 
-                // ✅ Função de upload sem nenhuma mudança
+
                 fun uploadImageToFirebaseStorage(onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
                     val uri = imageUri ?: return
                     val storageRef = FirebaseStorage.getInstance().reference
-                        .child("volunteer_images/${UUID.randomUUID()}.jpg") // Nome aleatório para a imagem
+                        .child("volunteer_images/${UUID.randomUUID()}.jpg")
 
                     storageRef.putFile(uri)
                         .addOnSuccessListener { taskSnapshot ->
                             storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                                onSuccess(downloadUri.toString()) // Retorna a URL da imagem
+                                onSuccess(downloadUri.toString())
                             }
                         }
                         .addOnFailureListener { exception ->
@@ -524,7 +522,7 @@ fun VolunteerProfileScreenContent() {
                                             isSaving = false
                                             errorMessage = null
                                             showSuccessDialog = true
-                                            volunteerProfileID = newVolunteerProfileID // 🔥 Salva o ID para passar pra próxima tela!
+                                            volunteerProfileID = newVolunteerProfileID
                                             isSaveButtonVisible = false
                                             Log.d("Firestore", "✅ Volunteer Profile saved: $newVolunteerProfileID")
                                         }
@@ -543,8 +541,6 @@ fun VolunteerProfileScreenContent() {
 
                 }
 
-
-// 🔥 Exibir barra de carregamento enquanto os dados estão sendo salvos
                 if (isSaving) {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(16.dp),
@@ -552,7 +548,7 @@ fun VolunteerProfileScreenContent() {
                     )
                 }
 
-// 🔥 Exibir mensagem de erro na tela, se houver
+
                 errorMessage?.let {
                     Text(
                         text = it,
@@ -561,7 +557,7 @@ fun VolunteerProfileScreenContent() {
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-// 🔥 Exibir pop-up de sucesso
+
                 if (showSuccessDialog) {
                     AlertDialog(
                         onDismissRequest = { showSuccessDialog = false },

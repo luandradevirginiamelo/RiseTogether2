@@ -59,9 +59,9 @@ fun RegisterVolunteerFormContent(onLogout: () -> Unit = {}) {
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFFEDE7F6), // Lilás bem claro → Transmite calma e sofisticação
-                        Color(0xFFB39DDB), // Roxo suave → Mantém a identidade sem ser pesado
-                        Color(0xFF673AB7)  // Roxo profundo → Passa autoridade e confiança
+                        Color(0xFFEDE7F6), // lIGHT
+                        Color(0xFFB39DDB), // lIGHT
+                        Color(0xFF673AB7)  // DARK
                     )
                 )
             )
