@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.risetogether.Doctor.DoctorLoginScreen
 import com.example.risetogether.ui.theme.DoctorBackground
 import com.example.risetogether.ui.theme.DoctorButton
+import com.google.firebase.auth.FirebaseAuth
 
 class ResetPasswordDoctorScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,9 +94,17 @@ fun ResetPasswordDoctorScreenContent() {
             text = "Send Reset Password"
         ) {
             if (email.isNotEmpty()) {
-                message = "A reset password link has been sent to $email"
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                context.startActivity(Intent(context, DoctorLoginScreen::class.java)) // Redirects to Login
+                val auth = FirebaseAuth.getInstance()
+                auth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            message = "A reset password link has been sent to $email"
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                            context.startActivity(Intent(context, DoctorLoginScreen::class.java))
+                        } else {
+                            message = "Failed to send reset email. Please check the address."
+                        }
+                    }
             } else {
                 message = "Please enter a valid email address!"
             }
