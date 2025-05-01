@@ -113,7 +113,7 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
                             )
                             patient = p
 
-                            // Buscar dados do voluntário e tarefa
+                            // Finding results from Volunteer selected
                             db.collection("VolunteeringSurvivorAssistTaskCategoryPersonalProfileCalendarSchedule")
                                 .document(taskId).get()
                                 .addOnSuccessListener { taskDoc ->
@@ -170,7 +170,7 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
                     title = { Text("Request Sent") },
-                    text = { Text("\"Request For Required Assistance Suscessfully create and Sent.\n" +
+                    text = { Text("\"Request For Required Assistance Successfully created and Sent.\n" +
                             "Select either button Back  to View List of Volunteers or button Back to Dashboard.\"") },
                     confirmButton = {
                         Button(onClick = {
@@ -195,7 +195,7 @@ class SendRequestSelectedAssistanceTask : ComponentActivity() {
             .collection("CancerPatientRequestFormRequiredAssistTask")
             .document().id
 
-        // ✅ FORMATANDO DATA E HORA AQUI, NO LUGAR CERTO
+        // Time and Date Right Place
         val currentDateFormatted = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
         val currentTimeFormatted = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
 

@@ -52,12 +52,12 @@ fun PatientinTreatmentProfileContent() {
     var patientGender by remember { mutableStateOf("") }
     var selectedTaskID by remember { mutableStateOf("") }
 
-    // 🔥 Assistance Categories (Static List)
+    //  Assistance Categories (Static List)
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
     var selectedCategory by remember { mutableStateOf("") } // Começa vazio
     var categoryExpanded by remember { mutableStateOf(false) }
 
-    // 🔥 Tasks within Selected Category (Dynamic List)
+
     var taskOptions by remember { mutableStateOf(listOf<String>()) }
     var selectedTask by remember { mutableStateOf("") } // Começa vazio
     var taskExpanded by remember { mutableStateOf(false) }
@@ -68,7 +68,7 @@ fun PatientinTreatmentProfileContent() {
     var AssistTaskCatID by remember { mutableStateOf("") }
     var isSaveEnabled by remember { mutableStateOf(true) }
 
-    // 🔥 Estado para mensagem de erro
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     @Composable
@@ -76,13 +76,13 @@ fun PatientinTreatmentProfileContent() {
         Button(
             onClick = onClick,
             modifier = Modifier
-                .height(76.dp) // 🔹 Mantém o botão pequeno como no Dashboard
-                .width(105.dp) // 🔹 Largura específica do Dashboard
-                .padding(end = 8.dp), // 🔹 Adiciona espaçamento para alinhar corretamente
+                .height(76.dp)
+                .width(105.dp)
+                .padding(end = 8.dp),
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
-                disabledContainerColor = Color.LightGray // 👈 changing colour after disability
+                disabledContainerColor = Color.LightGray
             )
         ) {
             Box(
@@ -90,7 +90,7 @@ fun PatientinTreatmentProfileContent() {
                     .fillMaxSize()
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5)) // 🔥 Azul Claro → Azul Médio
+                            colors = listOf(Color(0xFFB3E5FC), Color(0xFF42A5F5))
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ),
@@ -98,7 +98,7 @@ fun PatientinTreatmentProfileContent() {
             ) {
                 Text(
                     text = text,
-                    fontSize = 14.sp, // 🔹 Mesmo tamanho de texto do Dashboard
+                    fontSize = 14.sp,
                     color = Color.Black,
                     fontWeight = FontWeight.Bold
                 )
@@ -106,7 +106,7 @@ fun PatientinTreatmentProfileContent() {
         }
     }
 
-    // 🔥 Esconde a mensagem de erro após 3 segundos
+
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             kotlinx.coroutines.delay(3000)
@@ -127,7 +127,7 @@ fun PatientinTreatmentProfileContent() {
             }
     }
 
-    // 🔥 Fetch Patient Data (Existing)
+    //  Fetch Patient Data (Existing)
     LaunchedEffect(auth.currentUser?.uid) {
         auth.currentUser?.uid?.let { userId ->
             db.collection("PatientinTreatment").document(userId).get()
@@ -140,7 +140,7 @@ fun PatientinTreatmentProfileContent() {
         }
     }
 
-    var documentList by remember { mutableStateOf(listOf<com.google.firebase.firestore.DocumentSnapshot>()) } // ✅ Store documents
+    var documentList by remember { mutableStateOf(listOf<com.google.firebase.firestore.DocumentSnapshot>()) }
 
     LaunchedEffect(selectedCategory) {
         if (selectedCategory.isBlank()) return@LaunchedEffect
@@ -157,13 +157,13 @@ fun PatientinTreatmentProfileContent() {
             .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
-                documentList = documents.documents // ✅ Save documents list
+                documentList = documents.documents
 
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
                 taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
 
                 selectedTask = taskOptions.firstOrNull() ?: ""
-                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: "" // ✅ Set first task ID
+                selectedTaskID = documents.firstOrNull()?.getString("AssistTaskID") ?: ""
             }
             .addOnFailureListener { exception ->
                 println("❌ Error fetching tasks: ${exception.message}")
@@ -183,7 +183,7 @@ fun PatientinTreatmentProfileContent() {
             )
     ) {
         Scaffold(
-            containerColor = Color.Transparent, // 🔥 Isso impede que o Scaffold cubra o fundo azul
+            containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = {
@@ -220,19 +220,18 @@ fun PatientinTreatmentProfileContent() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues) // 🔥 Aplica padding corretamente!
+                    .padding(paddingValues)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 🔥 CONTAINER BRANCO ENVOLVENDO O CONTEÚDO
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(12.dp)) // 🔹 Adiciona sombra para destaque
-                        .background(Color.White, RoundedCornerShape(12.dp)) // 🔹 Fundo branco arredondado
+                        .shadow(8.dp, RoundedCornerShape(12.dp))
+                        .background(Color.White, RoundedCornerShape(12.dp))
                         .padding(16.dp) // 🔹 Espaçamento interno
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -252,7 +251,7 @@ fun PatientinTreatmentProfileContent() {
 
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        // 🔥 Dropdown 1: Assistance Task Category
+                        //  Dropdown 1: Assistance Task Category
                         Text("Select Assistance Task Category:", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = categoryExpanded,
@@ -283,7 +282,7 @@ fun PatientinTreatmentProfileContent() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 🔥 Dropdown 2: Assistance Task within Selected Category
+                        //  Dropdown 2: Assistance Task within Selected Category
                         Text("Assistance Task within Selected Category:", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = taskExpanded,
@@ -315,7 +314,7 @@ fun PatientinTreatmentProfileContent() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 🔥 Dropdown 3: Number of Days
+                        //  Dropdown 3: Number of Days
                         Text("Number of Days Selected Assistance Task Required per Week::", fontSize = 16.sp, color = Color.Black)
                         ExposedDropdownMenuBox(
                             expanded = daysExpanded,
@@ -343,10 +342,10 @@ fun PatientinTreatmentProfileContent() {
                                 }
                             }
                         }
-                    } // 🔹 FECHA O BOX AQUI!
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // 🔥 Exibir mensagem de erro no centro da tela
+
                     errorMessage?.let {
                         Text(
                             text = it,
@@ -361,7 +360,7 @@ fun PatientinTreatmentProfileContent() {
                 fun GradientButton(text: String, enabled: Boolean = true, onClick: () -> Unit) {
                     Button(
                         onClick = onClick,
-                        enabled = enabled, // ← Habilita/desabilita o botão
+                        enabled = enabled,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(75.dp)
@@ -399,11 +398,10 @@ fun PatientinTreatmentProfileContent() {
                 }
 
 
-                // 🔥 Botão Save com Validação
                 GradientButton(text = "Save", enabled = isSaveEnabled) {
                     val userId = auth.currentUser?.uid ?: return@GradientButton
 
-                    // 🔥 Validação: Verifica se todos os campos foram preenchidos
+
                     if (selectedCategory.isBlank() || selectedTask.isBlank() || selectedDays.isBlank()) {
                         errorMessage = "Please fill in all required fields before saving."
                         return@GradientButton
@@ -411,12 +409,12 @@ fun PatientinTreatmentProfileContent() {
 
 
                     val patientData = hashMapOf(
-                        "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, // PK correto
-                        "CancerPatientID" to userId, // FK correto
+                        "CancerPatientCategoryTaskProfileID" to db.collection("CancerPatientProfile").document().id, //PK
+                        "CancerPatientID" to userId, // FK
                         "PatCancerType" to patientCancerType,
                         "CancerPatientGender" to patientGender,
-                        "AssistTaskCatID" to selectedCategory, // FK correto
-                        "AssistTaskID" to selectedTaskID, // ✅ Agora estamos salvando o ID da tarefa, não o nome!
+                        "AssistTaskCatID" to selectedCategory, // FK
+                        "AssistTaskID" to selectedTaskID,
                         "NoOfDaysPerWeek" to selectedDays
                     )
 
@@ -435,14 +433,14 @@ fun PatientinTreatmentProfileContent() {
 
                 GradientButton(text = "Another Assistance Task") {
                     isSaveEnabled = true
-                    selectedCategory = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    selectedCategory = ""
                     categoryExpanded = false
 
-                    taskOptions = listOf() // 🔥 Limpa a lista de tarefas
-                    selectedTask = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    taskOptions = listOf()
+                    selectedTask = ""
                     taskExpanded = false
 
-                    selectedDays = "" // 🔥 Deixa vazio para só aparecer quando o usuário clicar
+                    selectedDays = ""
                     daysExpanded = false
                 }
 

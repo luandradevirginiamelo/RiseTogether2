@@ -173,7 +173,6 @@ fun ViewPatientRequestsContent() {
                 )
 
 
-                // ✅ INSIRA AQUI O POP-UP DENTRO DO BOX!
                 if (showPopup && selectedRequestId != null) {
                     ViewPatientRequestPopup(
                         requestId = selectedRequestId!!,
@@ -337,8 +336,7 @@ fun ViewPatientRequestsContent() {
                 }
             }
         }
-
-        // 🔥 Show popup
+        
         if (showPopup && selectedRequestId != null) {
             ViewPatientRequestPopup(
                 requestId = selectedRequestId!!,
@@ -385,7 +383,7 @@ fun ViewPatientRequestPopup(
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
                     val fullData = doc.data?.toMutableMap() ?: mutableMapOf()
-                    fullData["PatRequestFormID"] = doc.id  // 👈 Esse é o ID do documento no Firestore
+                    fullData["PatRequestFormID"] = doc.id
                     requestData = fullData
                     val patientId = doc.getString("CancerPatientID") ?: ""
                     val volunteerId = doc.getString("VolunteerID") ?: ""
@@ -476,12 +474,12 @@ fun ViewPatientRequestPopup(
         NotificationAcceptScreen(
             requestData = requestData!!,
             onClose = {
-                showAcceptPopup = false // Fecha apenas o pop-up de confirmação (2.2B2a)
-                onDismiss()             // Fecha a tela anterior (2.2B1)
+                showAcceptPopup = false
+                onDismiss()
             },
             onNotificationSent = {
-                showAcceptPopup = false // Fecha 2.2B2a
-                onDismiss()             // Fecha 2.2B1 e volta para 2.2B
+                showAcceptPopup = false
+                onDismiss()
             }
         )
     }

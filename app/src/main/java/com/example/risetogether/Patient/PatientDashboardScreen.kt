@@ -61,9 +61,9 @@ fun PatientDashboardScreenContent() {
             Button(
                 onClick = onClick,
                 modifier = Modifier
-                    .height(76.dp) // 🔹 Small button height
-                    .width(105.dp) // 🔹 Small button width
-                    .padding(end = 8.dp), // 🔹 Adjusts spacing inside TopAppBar
+                    .height(76.dp) //  Small button height
+                    .width(105.dp) //  Small button width
+                    .padding(end = 8.dp), //  Adjusts spacing inside TopAppBar
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
             ) {
@@ -80,7 +80,7 @@ fun PatientDashboardScreenContent() {
                 ) {
                     Text(
                         text = text,
-                        fontSize = 14.sp, // 🔹 Smaller text size
+                        fontSize = 14.sp, //  Smaller text size
                         color = Color.Black,
                         fontWeight = FontWeight.Bold
                     )
@@ -98,7 +98,7 @@ fun PatientDashboardScreenContent() {
                             fontSize = 15.sp
                         )
                     },
-                    navigationIcon = { // 🔹 Menu Icon on the Left
+                    navigationIcon = { //  Menu Icon on the Left
                         IconButton(onClick = { /* TODO: Open Menu */ }) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_menu), // Replace with your actual icon name
@@ -119,10 +119,10 @@ fun PatientDashboardScreenContent() {
                                 context.startActivity(intent)
                             }
                         )
-                    }, // 🔥 Closed 'actions' properly
+                    }, //  Closed 'actions' properly
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
 
-                ) // 🔥 Closed 'TopAppBar' properly
+                ) //  Closed 'TopAppBar' properly
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
@@ -137,7 +137,7 @@ fun PatientDashboardScreenContent() {
             ) {
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // 🔲 Multi-Layered Border Around Logo + Buttons
+                //  Multi-Layered Border Around Logo + Buttons
                 Box(
                     modifier = Modifier
                         .border(10.dp, Color(0xFFB3E5FC), RoundedCornerShape(12.dp)) // 🟣 Purple Layer
@@ -146,7 +146,7 @@ fun PatientDashboardScreenContent() {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // 🔹 LOGO
+
                         Box(
                             modifier = Modifier
                                 .shadow(12.dp, RoundedCornerShape(8.dp))
@@ -164,7 +164,7 @@ fun PatientDashboardScreenContent() {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 🔥 DASHBOARD TITLE
+
                         Text(
                             text = "Patient in Treatment Home",
                             fontSize = 20.sp,
@@ -174,12 +174,12 @@ fun PatientDashboardScreenContent() {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 🔥 BUTTONS (Using Standard PatientButton)
+                        //  Buttons (Using Standard PatientButton)
                         PatientButton(
                             text = "Create Profile With Required Assistance Tasks",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, PatientinTreatmentProfile::class.java))
                         }
@@ -188,7 +188,7 @@ fun PatientDashboardScreenContent() {
                             text = "View Volunteers for Require Task and Send Request",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, ViewListVolunteersScreen::class.java))
                         }
@@ -197,7 +197,7 @@ fun PatientDashboardScreenContent() {
                             text = "View Notifications & Reminders for Requested Task",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, ViewNotificationsRemindersScreen::class.java))
                         }
@@ -206,7 +206,7 @@ fun PatientDashboardScreenContent() {
                             text = "Provide Feedback & Ratings for Received Assistance",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, ProvideFeedbackRatingsScreen::class.java))
                         }
@@ -221,12 +221,12 @@ fun PatientDashboardScreenContent() {
 @Composable
 fun PatientButton(
     text: String,
-    modifier: Modifier = Modifier, // 🔥 Agora aceita Modifier
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier // 🔥 Passa o Modifier corretamente
+        modifier = modifier
             .fillMaxWidth()
             .height(112.dp)
             .padding(vertical = 2.dp),

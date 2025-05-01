@@ -91,7 +91,7 @@ fun ViewListVolunteersScreenContent() {
     var taskIDs by remember { mutableStateOf(listOf<String>()) } // 🔥 Adicionando lista para TaskIDs
 
     val assistanceOptions = listOf("Household", "Garden", "Transportation")
-    // Função para atualizar manualmente a tarefa selecionada
+
     fun updateSelectedTask(task: String, taskID: String) {
         selectedTask = task
         selectedTaskID = taskID
@@ -108,7 +108,7 @@ fun ViewListVolunteersScreenContent() {
                     patientCancerType = document.getString("PatCancerType") ?: ""
                     patientGender = document.getString("CancerPatientGender") ?: ""
 
-                    println("🔥 Paciente encontrado: $patientCancerType, $patientGender")
+                    println("Paciente encontrado: $patientCancerType, $patientGender")
                 } else {
                     println("❌ Paciente não encontrado!")
                 }
@@ -140,27 +140,25 @@ fun ViewListVolunteersScreenContent() {
                 taskOptions = tasks
                 taskIDs = ids
 
-                // 🔥 NÃO SELECIONA A PRIMEIRA TASK AUTOMATICAMENTE
+
                 selectedTask = ""
                 selectedTaskID = ""
 
-                println("🔥 Firestore Tasks Encontradas: $tasks com IDs: $ids")
+                println("Firestore Tasks: $tasks com IDs: $ids")
             }
             .addOnFailureListener { exception ->
-                println("❌ Erro ao buscar tarefas: ${exception.message}")
+                println("❌ Error: ${exception.message}")
             }
     }
 
-
-    // 🔥 Efeito que escuta mudanças na TaskID e busca voluntários corretos
     LaunchedEffect(selectedTaskID) {
         if (selectedTaskID.isBlank() || selectedCategory.isBlank() || patientCancerType.isBlank() || patientGender.isBlank()) return@LaunchedEffect
 
-        println("🔥 Searching for volunteers for:")
-        println("   👉 TaskID: $selectedTaskID")
-        println("   👉 Categoria: $selectedCategory")
-        println("   👉 Tipo de Câncer do Paciente: $patientCancerType")
-        println("   👉 Gênero do Paciente: $patientGender")
+        println("Searching for volunteers for:")
+        println("TaskID: $selectedTaskID")
+        println("Category: $selectedCategory")
+        println("Cancer Type: $patientCancerType")
+        println("Gender: $patientGender")
 
         db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory")
             .whereEqualTo("AssistTaskID", selectedTaskID)
@@ -180,7 +178,7 @@ fun ViewListVolunteersScreenContent() {
                 }
 
                 if (volunteerIDs.isEmpty()) {
-                    println("❌ Nenhum voluntário encontrado para essa tarefa e categoria.")
+                    println("No Volunteer Appear for this Task")
                     volunteerOptions = listOf("No volunteers available")
                     return@addOnSuccessListener
                 }

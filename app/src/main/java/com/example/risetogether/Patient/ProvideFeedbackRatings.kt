@@ -57,14 +57,14 @@ fun ProvideFeedbackRatingsContent() {
     LaunchedEffect(patientId) {
         db.collection("NotificationOfPatientRequest")
             .whereEqualTo("PatID", patientId)
-            .whereEqualTo("RequestStatus", "Accepted") // use "RequestStatus" igual no Firestore
+            .whereEqualTo("RequestStatus", "Accepted") // use "RequestStatus" Firestore
             .get()
             .addOnSuccessListener { snapshot ->
                 val weeks = snapshot.documents
                     .mapNotNull { it.getString("WeekCommenceDate") }
                     .distinct()
 
-                availableWeeks = weeks.sorted() // ou ordene como quiser
+                availableWeeks = weeks.sorted()
             }
     }
 
@@ -72,7 +72,7 @@ fun ProvideFeedbackRatingsContent() {
         db.collection("NotificationOfPatientRequest")
             .whereEqualTo("PatID", patientId)
             .whereEqualTo("WeekCommenceDate", week)
-            .whereEqualTo("RequestStatus", "Accepted") // <- CORRETO
+            .whereEqualTo("RequestStatus", "Accepted")
             .get()
             .addOnSuccessListener { documents ->
                 val tasks = documents.map {

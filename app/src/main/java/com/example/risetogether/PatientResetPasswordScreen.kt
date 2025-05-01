@@ -103,7 +103,7 @@ fun ResetPasswordScreenContent() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 🔥 "Send Reset Password Link" Button (Moved Below the Container)
+        // "Send Reset Password Link" Button
         PatientButton(
             text = "Send Reset Password"
         ) {

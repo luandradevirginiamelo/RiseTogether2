@@ -143,19 +143,19 @@ fun PatientLoginScreenContent() {
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-                // 🔹 Error Message (if login fails)
+                //  Error Message (if login fails)
                 errorMessage?.let {
                     Text(text = it, color = Color.Red, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // 🔹 Progress Indicator
+                // Progress Indicator
                 if (isLoading) {
                     CircularProgressIndicator(color = Color.Gray)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // 🔹 Login Button (Patient Authentication & Verification)
+                // Login Button (Patient Authentication & Verification)
                 PatientButton(
                     text = "Login",
                 ) {
@@ -174,7 +174,7 @@ fun PatientLoginScreenContent() {
                             if (task.isSuccessful) {
                                 val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                                // 🔥 Fetch the Patient record from Firestore
+                                //Fetch the Patient record from Firestore
                                 db.collection("PatientinTreatment").document(userId).get()
                                     .addOnSuccessListener { document ->
                                         if (document.exists()) {
@@ -195,7 +195,7 @@ fun PatientLoginScreenContent() {
                                                                     isLoading = false
                                                                     //com.example.risetogether.notifications.DailyReminderScheduler.scheduleDailyReminder(context)
 
-                                                                    // ✅ Dashboard
+
                                                                     context.startActivity(Intent(context, PatientDashboardScreen::class.java))
                                                                 }
                                                                 .addOnFailureListener { e ->

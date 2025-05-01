@@ -125,7 +125,7 @@ fun ViewNotificationsRemindersContent() {
                         "name" to (it.getString("AssistTaskName") ?: "N/A"),
                         "date" to (it.getString("NotificDate") ?: ""),
                         "time" to (it.getString("NotificTime") ?: ""),
-                        "requestId" to it.id // Usar ID do documento da notificação!
+                        "requestId" to it.id
                     )
                 }
 
@@ -341,7 +341,6 @@ fun ViewNotificationsRemindersContent() {
 
                 }
 
-                // ✅ Chamada correta do popup, FORA do Scaffold
                 if (showPopup && selectedRequestId != null) {
                     ViewPatientRequestPopup(
                         requestId = selectedRequestId!!,
@@ -361,7 +360,6 @@ fun ViewNotificationsRemindersContent() {
             }
     }
 
-    // ✅ FUNÇÃO AGORA FORA DA CLASSE
     @Composable
     fun ViewPatientRequestPopup(
         requestId: String,

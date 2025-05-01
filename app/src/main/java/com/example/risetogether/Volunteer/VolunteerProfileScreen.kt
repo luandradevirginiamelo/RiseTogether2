@@ -139,17 +139,17 @@ fun VolunteerProfileScreenContent() {
 
     LaunchedEffect(auth.currentUser?.uid) {
         auth.currentUser?.uid?.let { userId ->
-            db.collection("VolunteeringCancerSurvivor").document(userId).get()  // ✅ Correct Collection
+            db.collection("VolunteeringCancerSurvivor").document(userId).get()  // Correct Collection
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
                         volunteerName = document.getString("VolunteerName") ?: ""
-                        volunteerSurname = document.getString("VolunteerSurname") ?: ""  // ✅ Correct Field Name
+                        volunteerSurname = document.getString("VolunteerSurname") ?: ""  // Correct Field Name
                     } else {
-                        println("🚨 No document found for Volunteer ID: $userId")
+                        println(" No document found for Volunteer ID: $userId")
                     }
                 }
                 .addOnFailureListener { exception ->
-                    println("❌ Error fetching volunteer data: ${exception.message}")
+                    println(" Error fetching volunteer data: ${exception.message}")
                 }
         }
     }
@@ -172,7 +172,7 @@ fun VolunteerProfileScreenContent() {
             .whereEqualTo("AssistTaskCatID", categoryID)
             .get()
             .addOnSuccessListener { documents ->
-                documentList = documents.documents // ✅ Save documents list
+                documentList = documents.documents //  Save documents list
 
                 val tasks = documents.mapNotNull { it.getString("AssistanceTaskNam") }
                 taskOptions = if (tasks.isNotEmpty()) tasks else listOf("No tasks available")
@@ -198,7 +198,7 @@ fun VolunteerProfileScreenContent() {
             )
     ) {
         Scaffold(
-            containerColor = Color.Transparent, // 🔥 Isso impede que o Scaffold cubra o fundo azul
+            containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = {
@@ -233,7 +233,7 @@ fun VolunteerProfileScreenContent() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues) // 🔥 Aplica padding corretamente!
+                    .padding(paddingValues)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -244,8 +244,8 @@ fun VolunteerProfileScreenContent() {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(12.dp)) // 🔹 Adiciona sombra para destaque
-                        .background(Color.White, RoundedCornerShape(12.dp)) // 🔹 Fundo branco arredondado
+                        .shadow(8.dp, RoundedCornerShape(12.dp))
+                        .background(Color.White, RoundedCornerShape(12.dp))
                         .padding(16.dp) // 🔹 Espaçamento interno
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -318,7 +318,7 @@ fun VolunteerProfileScreenContent() {
                                         text = { Text(option) },
                                         onClick = {
                                             selectedTask = option
-                                            selectedTaskID = documentList.getOrNull(index)?.getString("AssistTaskID") ?: "" // ✅ Update Task ID
+                                            selectedTaskID = documentList.getOrNull(index)?.getString("AssistTaskID") ?: ""
                                             taskExpanded = false
                                         }
                                     )
@@ -386,7 +386,7 @@ fun VolunteerProfileScreenContent() {
                                 .fillMaxSize()
                                 .background(
                                     brush = Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784)) // 🔥 Azul Claro → Azul
+                                        colors = listOf(Color(0xFFFFF8E1), Color(0xFF81C784))
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 ),
@@ -503,7 +503,7 @@ fun VolunteerProfileScreenContent() {
                                     val assistTaskName = taskDocs.firstOrNull()?.getString("AssistanceTaskNam") ?: ""
 
                                     val profileRef = db.collection("VolunteeringSurvivorProfilewithAssistTaskCategory").document()
-                                    val newVolunteerProfileID = profileRef.id // 🔥 Pegando ID correto
+                                    val newVolunteerProfileID = profileRef.id
 
                                     val volunteerData = hashMapOf(
                                         "VolunteerProfileID" to newVolunteerProfileID,
@@ -572,7 +572,7 @@ fun VolunteerProfileScreenContent() {
 
                                     if (volunteerProfileID.isNotEmpty()) {
                                         val intent = Intent(context, CreateProfileCalendarScheduleActivity::class.java)
-                                        intent.putExtra("VolunteerProfileID", volunteerProfileID) // ✅ Passando ID corretamente
+                                        intent.putExtra("VolunteerProfileID", volunteerProfileID)
                                         context.startActivity(intent)
                                     } else {
                                         errorMessage = "Error: Volunteer Profile ID is missing."
@@ -586,22 +586,22 @@ fun VolunteerProfileScreenContent() {
                 }
 
                 GradientButton(text = "Another Assistance Task") {
-                    selectedCategory = "" // 🔥 Reset category
+                    selectedCategory = "" // Reset category
                     categoryExpanded = false
 
-                    taskOptions = listOf() // 🔥 Clear task list
+                    taskOptions = listOf() //  Clear task list
                     selectedTask = ""
                     selectedTaskID = ""
                     taskExpanded = false
 
-                    selectedDays = "" // 🔥 Reset days selection
+                    selectedDays = "" //  Reset days selection
                     daysExpanded = false
 
-                    imageUri = null // 🔥
+                    imageUri = null //
 
                     isSaveButtonVisible = true
 
-                    refreshTrigger++ // 🔥 Forces the app to reload fresh data next time!
+                    refreshTrigger++ //  Forces the app to reload fresh data next time!
                 }
 
                 Spacer(modifier = Modifier.height(5.dp))

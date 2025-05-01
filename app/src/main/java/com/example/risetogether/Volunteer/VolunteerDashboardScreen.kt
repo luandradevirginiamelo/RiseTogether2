@@ -99,7 +99,7 @@ fun VolunteerDashboardScreenContent() {
                             fontSize = 15.sp
                         )
                     },
-                    navigationIcon = { // 🔹 Menu Icon on the Left
+                    navigationIcon = {
                         IconButton(onClick = { /* TODO: Open Menu */ }) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_menu), // Replace with your actual icon name
@@ -119,10 +119,10 @@ fun VolunteerDashboardScreenContent() {
                                 context.startActivity(intent)
                             }
                         )
-                    }, // 🔥 Closed 'actions' properly
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
 
-                ) // 🔥 Closed 'TopAppBar' properly
+                )
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
@@ -137,7 +137,7 @@ fun VolunteerDashboardScreenContent() {
             ) {
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // 🔲 Multi-Layered Border Around Logo + Buttons
+                //  Multi-Layered Border Around Logo + Buttons
                 Box(
                     modifier = Modifier
                         .border(10.dp, Color(0xFFFFF8E1), RoundedCornerShape(12.dp)) // 🟣 Purple Layer
@@ -164,7 +164,7 @@ fun VolunteerDashboardScreenContent() {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 🔥 DASHBOARD TITLE
+
                         Text(
                             text = "Volunteer's Home (Dashboard) Screen",
                             fontSize = 20.sp,
@@ -174,12 +174,12 @@ fun VolunteerDashboardScreenContent() {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 🔥 BUTTONS (Using Standard PatientButton)
+
                         VolunteerButton(
                             text = "Create Profile Record with Assistance Tasks & Category",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, VolunteerProfileScreen::class.java))
                         }
@@ -189,7 +189,7 @@ fun VolunteerDashboardScreenContent() {
                                     " & Send Notifications\n",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, ViewPatientRequestsScreen::class.java))
                         }
@@ -198,7 +198,7 @@ fun VolunteerDashboardScreenContent() {
                             text = "View Feedback & Ratings for Assistance Provided",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(2.dp) // ✅ Agora Modifier funciona corretamente
+                                .padding(2.dp)
                         ) {
                             context.startActivity(Intent(context, ViewFeedbackRatingsScreen::class.java))
                         }
@@ -215,12 +215,12 @@ fun VolunteerDashboardScreenContent() {
 @Composable
 fun VolunteerButton(
     text: String,
-    modifier: Modifier = Modifier, // 🔥 Agora aceita Modifier
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier // 🔥 Passa o Modifier corretamente
+        modifier = modifier
             .fillMaxWidth()
             .height(112.dp)
             .padding(vertical = 2.dp),

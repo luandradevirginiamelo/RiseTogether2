@@ -89,7 +89,7 @@ fun ResetPasswordDoctorScreenContent() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 🔥 Reset Password Button
+        // Reset Password Button
         DoctorButton(
             text = "Send Reset Password"
         ) {

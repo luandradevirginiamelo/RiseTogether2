@@ -177,7 +177,7 @@ fun VolunteerLoginScreenContent() {
                                                 val volunteerGender = document.getString("VolunGender") ?: ""
                                                 val volunteerCancerType = document.getString("VolunCancerType") ?: ""
 
-                                                // ✅ Store Volunteer Data in SharedPreferences
+                                                // Store Volunteer Data in SharedPreferences
                                                 val sharedPref = context.getSharedPreferences("VolunteerData", Context.MODE_PRIVATE)
                                                 with(sharedPref.edit()) {
                                                     putString("VolunteerID", volunteerID)

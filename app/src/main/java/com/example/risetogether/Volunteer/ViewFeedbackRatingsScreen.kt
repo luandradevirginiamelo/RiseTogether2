@@ -66,7 +66,7 @@ fun ViewFeedbackRatingsContent() {
         return timestamp?.toDate()?.let { sdf.format(it) } ?: ""
     }
 
-    // Buscar semanas disponíveis com feedbacks para o voluntário logado
+
     LaunchedEffect(volunteerId) {
         db.collection("FeedbackRatings")
             .whereEqualTo("VolunteerID", volunteerId)
@@ -79,7 +79,7 @@ fun ViewFeedbackRatingsContent() {
             }
     }
 
-    // Buscar feedbacks da semana selecionada
+
     fun fetchFeedbacksForWeek(week: String) {
         db.collection("FeedbackRatings")
             .whereEqualTo("VolunteerID", volunteerId)

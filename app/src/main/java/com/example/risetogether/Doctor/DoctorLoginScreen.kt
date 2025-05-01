@@ -148,7 +148,7 @@ fun DoctorLoginScreenContent() {
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // 🔥 Login Button
+                // Login Button
                 DoctorButton(
                     text = "Login"
                 ) {
@@ -160,7 +160,7 @@ fun DoctorLoginScreenContent() {
                             if (task.isSuccessful) {
                                 val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
 
-                                // 🔥 Fetch from "Doctor" collection (uppercase)
+                                // Fetch from "Doctor" collection (uppercase)
                                 db.collection("Doctor").document(userId).get()
                                     .addOnSuccessListener { document ->
                                         if (document.exists()) {

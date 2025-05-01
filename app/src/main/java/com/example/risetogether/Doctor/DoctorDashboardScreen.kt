@@ -173,7 +173,7 @@ fun DoctorDashboardScreenContent() {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 🔥 DASHBOARD TITLE
+                        // DASHBOARD TITLE
                         Text(
                             text = "Doctor`s Home (Dashboard) Screen",
                             fontSize = 20.sp,
@@ -183,7 +183,7 @@ fun DoctorDashboardScreenContent() {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 🔥 BUTTONS (Using Standard PatientButton)
+                        // BUTTONS (Options)
                         DoctorButton(
                             text = "Register Patient in Treatment",
                             modifier = Modifier
@@ -212,7 +212,7 @@ fun DoctorDashboardScreenContent() {
     }
 }
 
-// 🔥 STANDARD BUTTON (PatientButton) FOR ALL SCREENS
+
 @Composable
 fun DoctorButton(
     text: String,
